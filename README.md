@@ -14,5 +14,5 @@ See https://github.com/ATLFlight/ATLFlightDocs/blob/master/GettingStarted.md
 ```
 git clone https://github.com/ATLFlight/cross_toolchain.git
 cd cross_toolchain
-make
+./install.sh
 ```
