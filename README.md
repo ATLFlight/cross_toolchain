@@ -20,5 +20,6 @@ cd cross_toolchain
 This will install:
 
 Cross compiler at: ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux
+
 Sysroot at: ${HEXAGON_SDK_ROOT}/sysroot
 
