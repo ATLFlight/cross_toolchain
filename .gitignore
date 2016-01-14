@@ -1,5 +1,5 @@
 COMPILER_INSTALLED
 SYSROOT_UNPACKED
-UNPACKED
+SYSROOT_CONFIGURED
 gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz
 ubuntu-core-14.04-core-armhf.tar.gz
