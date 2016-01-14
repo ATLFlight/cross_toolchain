@@ -1,3 +1,4 @@
+#!/bin/bash
 ############################################################################
 #
 #   Copyright (c) 2016 Mark Charlebois. All rights reserved.
@@ -30,45 +31,65 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
-all: COMPILER_INSTALLED SYSROOT_CONFIGURED
 
-fetch: gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz ubuntu-core-14.04-core-armhf.tar.gz
 
-.PHONY check_env:
-	@[ ! "${HEXAGON_SDK_ROOT}" = "" ] || (echo "Must set HEXAGON_SDK_ROOT" && false)
-	
-gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz:
-	@wget https://launchpad.net/linaro-toolchain-binaries/trunk/2013.08/+download/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz
-	
-ubuntu-core-14.04-core-armhf.tar.gz:
-	@wget http://cdimage.ubuntu.com/ubuntu-core/releases/14.04.3/release/ubuntu-core-14.04-core-armhf.tar.gz
+if [ "${HEXAGON_SDK_ROOT}" = "" ]; then
+	echo "Must set HEXAGON_SDK_ROOT"
+	exit 1
+fi
 
-/usr/bin/qemu-arm-static:
+# Fetch compiler
+if [ ! -f gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz ]; then
+	wget https://launchpad.net/linaro-toolchain-binaries/trunk/2013.08/+download/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz
+fi
+
+if [ ! -f ubuntu-core-14.04-core-armhf.tar.gz ]; then
+	wget http://cdimage.ubuntu.com/ubuntu-core/releases/14.04.3/release/ubuntu-core-14.04-core-armhf.tar.gz
+fi
+
+if [ ! -f /usr/bin/qemu-arm-static ]; then
 	echo "Install of qemu-user-static requires sudo"
 	sudo apt-get install -y qemu-user-static
+fi
 
-COMPILER_INSTALLED: check_env gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz
+if [ ! -d ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux ]; then
 	tar -C ${HEXAGON_SDK_ROOT} -xJf gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz
-	touch $@
+fi
 
-SYSROOT_UNPACKED: check_env ubuntu-core-14.04-core-armhf.tar.gz
-	@mkdir -p ${HEXAGON_SDK_ROOT}/sysroot
-	@tar -C ${HEXAGON_SDK_ROOT}/sysroot --exclude="dev/*" -xzf ubuntu-core-14.04-core-armhf.tar.gz
-	touch $@
-	
-${HEXAGON_SDK_ROOT}/sysroot/setup.sh: check_env SYSROOT_UNPACKED
-	@cp setup.sh $@
+if [ ! -f SYSROOT_UNPACKED ]; then
+	mkdir -p ${HEXAGON_SDK_ROOT}/sysroot
+	tar -C ${HEXAGON_SDK_ROOT}/sysroot --exclude="dev/*" -xzf ubuntu-core-14.04-core-armhf.tar.gz
+	touch SYSROOT_UNPACKED
+fi
 
-${HEXAGON_SDK_ROOT}/sysroot/usr/bin/qemu-arm-static: check_env SYSROOT_UNPACKED
-	@cp /usr/bin/qemu-arm-static $@
+if [ ! -f ${HEXAGON_SDK_ROOT}/sysroot/setup.sh ]; then
+	cp setup.sh ${HEXAGON_SDK_ROOT}/sysroot/setup.sh
+fi
 
-SYSROOT_CONFIGURED: check_env ${HEXAGON_SDK_ROOT}/sysroot/usr/bin/qemu-arm-static ${HEXAGON_SDK_ROOT}/sysroot/setup.sh
+cp /usr/bin/qemu-arm-static ${HEXAGON_SDK_ROOT}/sysroot/usr/bin/qemu-arm-static
+
+function unmount_sysroot {
+	if mount | grep ${HEXAGON_SDK_ROOT}/sysroot/sys > /dev/null; then
+		sudo umount ${HEXAGON_SDK_ROOT}/sysroot/sys
+	fi
+	if mount | grep ${HEXAGON_SDK_ROOT}/sysroot/proc > /dev/null; then
+		sudo umount ${HEXAGON_SDK_ROOT}/sysroot/proc
+	fi
+	if mount | grep ${HEXAGON_SDK_ROOT}/sysroot/dev > /dev/null; then
+		sudo umount ${HEXAGON_SDK_ROOT}/sysroot/dev
+	fi
+}
+
+if [ ! -f SYSROOT_CONFIGURED ]; then
+	unmount_sysroot
 	sudo mount -o bind /dev ${HEXAGON_SDK_ROOT}/sysroot/dev
-	sudo mount -t sysfs /sys ${HEXAGON_SDK_ROOT}/sysroot/sys
+	sudo mount -o bind /sys ${HEXAGON_SDK_ROOT}/sysroot/sys
 	sudo mount -t proc /proc ${HEXAGON_SDK_ROOT}/sysroot/proc
 	sudo cp /proc/mounts ${HEXAGON_SDK_ROOT}/sysroot/etc/mtab
 	sudo chroot ${HEXAGON_SDK_ROOT}/sysroot /setup.sh
-	sudo umount ${HEXAGON_SDK_ROOT}/sysroot/sys
-	sudo umount ${HEXAGON_SDK_ROOT}/sysroot/proc
-	sudo umount ${HEXAGON_SDK_ROOT}/sysroot/dev
-	touch $@
+	unmount_sysroot
+fi
+
+echo "cross compiler is at: ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux"
+echo "sysroot is at:        ${HEXAGON_SDK_ROOT}/sysroot"
+echo Done
