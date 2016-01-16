@@ -33,42 +33,54 @@
 ############################################################################
 
 
-if [ "${HEXAGON_SDK_ROOT}" = "" ]; then
-	echo "Must set HEXAGON_SDK_ROOT"
+if [ "${HEXAGON_SDK_ROOT}" = "" || ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic ]; then
+	echo "Must install Hexagon SDK and set HEXAGON_SDK_ROOT"
 	exit 1
 fi
 
-# Fetch compiler
-if [ ! -f gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz ]; then
-	wget https://launchpad.net/linaro-toolchain-binaries/trunk/2013.08/+download/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz
+# Set up the Hexagon SDK
+if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Linux/qaic ]; then
+	pushd .
+	cd ${HEXAGON_SDK_ROOT}/tools/qaic/
+	make
+	popd
 fi
 
-if [ ! -f ubuntu-core-14.04-core-armhf.tar.gz ]; then
-	wget http://cdimage.ubuntu.com/ubuntu-core/releases/14.04.3/release/ubuntu-core-14.04-core-armhf.tar.gz
+mkdir -p install_state
+mkdir -p downloads
+
+# Fetch compiler
+if [ ! -f downloads/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz ]; then
+	wget -P downloads https://launchpad.net/linaro-toolchain-binaries/trunk/2013.08/+download/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz
 fi
+
+if [ ! -f downloads/ubuntu-core-14.04-core-armhf.tar.gz ]; then
+	wget -P downloads http://cdimage.ubuntu.com/ubuntu-core/releases/14.04.3/release/ubuntu-core-14.04-core-armhf.tar.gz
+fi
+
+if [ ! -d ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux ]; then
+	tar -C ${HEXAGON_SDK_ROOT} -xJf downloads/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz
+fi
+
+if [ ! -f install_state/SYSROOT_UNPACKED || ! -d ${HEXAGON_SDK_ROOT}/sysroot ]; then
+	mkdir -p ${HEXAGON_SDK_ROOT}/sysroot
+	tar -C ${HEXAGON_SDK_ROOT}/sysroot --exclude="dev/*" -xzf downloads/ubuntu-core-14.04-core-armhf.tar.gz
+	echo "${HEXAGON_SDK_ROOT}/sysroot" > install_state/SYSROOT_UNPACKED
+fi
+
+# Copy setup script to the sysroot
+cp setup.sh ${HEXAGON_SDK_ROOT}/sysroot/setup.sh
 
 if [ ! -f /usr/bin/qemu-arm-static ]; then
 	echo "Install of qemu-user-static requires sudo"
 	sudo apt-get install -y qemu-user-static
 fi
 
-if [ ! -d ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux ]; then
-	tar -C ${HEXAGON_SDK_ROOT} -xJf gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz
-fi
-
-if [ ! -f SYSROOT_UNPACKED ]; then
-	mkdir -p ${HEXAGON_SDK_ROOT}/sysroot
-	tar -C ${HEXAGON_SDK_ROOT}/sysroot --exclude="dev/*" -xzf ubuntu-core-14.04-core-armhf.tar.gz
-	touch SYSROOT_UNPACKED
-fi
-
-if [ ! -f ${HEXAGON_SDK_ROOT}/sysroot/setup.sh ]; then
-	cp setup.sh ${HEXAGON_SDK_ROOT}/sysroot/setup.sh
-fi
-
+# Copy qemu-arm-static to sysroot to install more packages
 cp /usr/bin/qemu-arm-static ${HEXAGON_SDK_ROOT}/sysroot/usr/bin/qemu-arm-static
 
 function unmount_sysroot {
+	echo "Unmounting sysroot mounts"
 	if mount | grep ${HEXAGON_SDK_ROOT}/sysroot/sys > /dev/null; then
 		sudo umount ${HEXAGON_SDK_ROOT}/sysroot/sys
 	fi
@@ -79,17 +91,27 @@ function unmount_sysroot {
 		sudo umount ${HEXAGON_SDK_ROOT}/sysroot/dev
 	fi
 }
-
-if [ ! -f SYSROOT_CONFIGURED ]; then
-	unmount_sysroot
+function mount_sysroot {
+	echo "mounting sysroot mounts"
 	sudo mount -o bind /dev ${HEXAGON_SDK_ROOT}/sysroot/dev
 	sudo mount -o bind /sys ${HEXAGON_SDK_ROOT}/sysroot/sys
 	sudo mount -t proc /proc ${HEXAGON_SDK_ROOT}/sysroot/proc
 	sudo cp /proc/mounts ${HEXAGON_SDK_ROOT}/sysroot/etc/mtab
+}
+
+if [ ! -f install_state/SYSROOT_CONFIGURED ]; then
+	unmount_sysroot
+	mount_sysroot
+	echo "Installing required packages"
 	sudo chroot ${HEXAGON_SDK_ROOT}/sysroot /setup.sh
 	unmount_sysroot
+	touch install_state/SYSROOT_CONFIGURED
 fi
 
-echo "cross compiler is at: ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux"
-echo "sysroot is at:        ${HEXAGON_SDK_ROOT}/sysroot"
+echo "Cross compiler is at: ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux"
+echo "Sysroot is at:        ${HEXAGON_SDK_ROOT}/sysroot"
+echo "Make sure to set the following environment variables:"
+echo "   export HEXAGON_SDK_ROOT=${HEXAGON_SDK_ROOT}"
+echo "   export HEXAGON_TOOLS_ROOT=${HEXAGON_TOOLS_ROOT}"
+echo "   export HEXAGON_ARM_SYSROOT=${HEXAGON_SDK_ROOT}/sysroot"
 echo Done
