@@ -91,7 +91,12 @@ if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic ]; then
 		echo
 		sh ./downloads/qualcomm_hexagon_sdk_2_0_eval.bin -i swing -DUSER_INSTALL_DIR=${HEXAGON_SDK_ROOT}
 	else
+		echo
 		echo "Put the file qualcomm_hexagon_sdk_2_0_eval.bin in the downloads directory"
+		echo "and re-run this script."
+		echo "If you do not have the file, you can download it from:"
+		echo "    https://developer.qualcomm.com/download/hexagon/hexagon-sdk-linux.bin"
+		echo
 	fi
 fi
 
@@ -219,5 +224,5 @@ echo "Make sure to set the following environment variables:"
 echo "   export HEXAGON_SDK_ROOT=${HEXAGON_SDK_ROOT}"
 echo "   export HEXAGON_TOOLS_ROOT=${HEXAGON_TOOLS_ROOT}"
 echo "   export HEXAGON_ARM_SYSROOT=${HEXAGON_ARM_SYSROOT}"
-echo "   export PATH=\${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux:\$PATH"
+echo "   export PATH=\${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux/bin:\$PATH"
 echo
