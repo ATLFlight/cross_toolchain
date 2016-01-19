@@ -32,6 +32,10 @@
 #
 ############################################################################
 
+# To install the 6.4.06 Hexagon tools:
+#    export HEXAGON_TOOLS_ROOT=${HOME}/Qualcomm/HEXAGON_Tools/6.4.06
+# Otherwise, the default is that the Hexagon Tools 7.2.10 are installed.
+
 trap fail_on_error ERR
 
 function fail_on_errors() {
@@ -120,25 +124,40 @@ if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Linux/qaic ]; then
 	exit 1
 fi
 
-if [ ! -f ${HEXAGON_TOOLS_ROOT}/bin/hexagon-clang ]; then
+if [[ ${HEXAGON_TOOLS_ROOT} = */7.2.10/Tools ]] ; then
+	if [ ! -f ${HEXAGON_TOOLS_ROOT}/bin/hexagon-clang ]; then
 
-	if [ -f downloads/Hexagon.LNX.7.2\ Installer-07210.1.tar ]; then
-		tar -C downloads -xf downloads/Hexagon.LNX.7.2\ Installer-07210.1.tar
-	else
-		echo "Put the file Hexagon.LNX.7.2\ Installer-07210.1.tar in the downloads directory"
-		echo "and re-run this script"
+		if [ -f downloads/Hexagon.LNX.7.2\ Installer-07210.1.tar ]; then
+			tar -C downloads -xf downloads/Hexagon.LNX.7.2\ Installer-07210.1.tar
+		else
+			echo "Put the file Hexagon.LNX.7.2\ Installer-07210.1.tar in the downloads directory"
+			echo "and re-run this script"
+			exit 1
+		fi
+
+		if [ -f downloads/Hexagon.LLVM_linux_installer_7.2.10.bin ]; then
+			echo "Installing Hexagon Tools 7.2.10 ..."
+			sh downloads/Hexagon.LLVM_linux_installer_7.2.10.bin -i silent
+		else
+			echo "Failed to untar downloads/Hexagon.LNX.7.2\ Installer-07210.1.tar"
+			echo "Missing downloads/Hexagon.LLVM_linux_installer_7.2.10.bin"
+			exit 1
+		fi
+
+	fi
+elif [[ ${HEXAGON_TOOLS_ROOT} = */6.4.06* ]]; then
+	if [ ! -f ${HEXAGON_TOOLS_ROOT}/qc/bin/hexagon-clang ]; then
+		echo
+		echo "The Hexagon Tools 6.4.06 version was not installed."
+		echo "Re-install the Hexagon SDK and select the Hexagon Tools install option"
+		echo "sh ./downloads/qualcomm_hexagon_sdk_2_0_eval.bin -i swing -DUSER_INSTALL_DIR=${HEXAGON_SDK_ROOT}"
+		echo
 		exit 1
 	fi
-
-	if [ -f downloads/Hexagon.LLVM_linux_installer_7.2.10.bin ]; then
-		echo "Installing Hexagon Tools 7.2.10 ..."
-		sh downloads/Hexagon.LLVM_linux_installer_7.2.10.bin -i silent
-	else
-		echo "Failed to untar downloads/Hexagon.LNX.7.2\ Installer-07210.1.tar"
-		echo "Missing downloads/Hexagon.LLVM_linux_installer_7.2.10.bin"
-		exit 1
-	fi
-
+else
+	echo "***************************************************************************"
+	echo "WARNING: Unable to determine which version of Hexagon Tools is being used"
+	echo "***************************************************************************"
 fi
 
 # Fetch ARMv7hf cross compiler
