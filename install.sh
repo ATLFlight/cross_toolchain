@@ -129,22 +129,26 @@ if [ ! -f downloads/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz ]; t
 	wget -P downloads https://launchpad.net/linaro-toolchain-binaries/trunk/2013.08/+download/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz
 fi
 
-# Fetch Ubuntu 14.04 ARM image
+# Fetch Ubuntu 14.04 ARM image for sysroot
 if [ ! -f downloads/ubuntu-trusty-14.04-armhf.com-20140603.tar.xz ]; then
 	#wget -P downloads http://cdimage.ubuntu.com/ubuntu-core/releases/14.04.3/release/ubuntu-core-14.04-core-armhf.tar.gz
 	wget -P downloads http://s3.armhf.com/dist/basefs/ubuntu-trusty-14.04-armhf.com-20140603.tar.xz
 fi
 
+# Unpack armhf cross compiler
 if [ ! -d ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux ]; then
+	echo "Unpacking cross compiler..."
 	tar -C ${HEXAGON_SDK_ROOT} -xJf downloads/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz
 fi
 
+# Unpack sysroot 
 if [ ! -f ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED ]; then
 	mkdir -p ${HEXAGON_ARM_SYSROOT}
+	echo "Unpacking sysroot..."
 	tar -C ${HEXAGON_ARM_SYSROOT} --exclude="dev/*" -xJf downloads/ubuntu-trusty-14.04-armhf.com-20140603.tar.xz && echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED
 fi
 
-# Extra packages to add to downloaded sysroot
+# Extra packages to add to install to sysroot
 EXTRA_PACKAGES=""
 
 # fakechroot is used to install additional packages without using sudo
@@ -197,11 +201,14 @@ if [ ! "${EXTRA_PACKAGES}" = "" ]; then
 	fi
 fi
 
-echo "Cross compiler is at: ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux"
-echo "Sysroot is at:        ${HEXAGON_SDK_ROOT}/sysroot"
+echo Done
+echo "--------------------------------------------------------------------"
+echo "armhf cross compiler is at: ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux"
+echo "armhf sysroot is at:        ${HEXAGON_SDK_ROOT}/sysroot"
+echo
 echo "Make sure to set the following environment variables:"
 echo "   export HEXAGON_SDK_ROOT=${HEXAGON_SDK_ROOT}"
 echo "   export HEXAGON_TOOLS_ROOT=${HEXAGON_TOOLS_ROOT}"
 echo "   export HEXAGON_ARM_SYSROOT=${HEXAGON_ARM_SYSROOT}"
 echo "   export PATH=\${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux:\$PATH"
-echo Done
+echo
