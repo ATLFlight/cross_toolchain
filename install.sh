@@ -39,10 +39,15 @@ function fail_on_errors() {
    exit 1;
 }
 
+# Extra packages to add to install to armhf sysroot
+EXTRA_PACKAGES=""
+
 # Install package deps
 if [ ! -f /usr/bin/qemu-arm-static ] || [ ! -f /usr/bin/fakechroot ]; then
-	echo "Please install qemu-user-static and fakechroot"
-	echo "sudo apt-get install qemu-user-static fakechroot"
+	if [ ! "${EXTRA_PACKAGES}" = "" ]; then
+		echo "Please install qemu-user-static and fakechroot"
+		echo "sudo apt-get install qemu-user-static fakechroot"
+	fi
 fi
 
 if [ "${HEXAGON_TOOLS_ROOT}" = "" ]; then
@@ -115,6 +120,7 @@ if [ ! -f ${HEXAGON_TOOLS_ROOT}/bin/hexagon-clang ]; then
 	fi
 
 	if [ -f downloads/Hexagon.LLVM_linux_installer_7.2.10.bin ]; then
+		echo "Installing Hexagon Tools 7.2.10 ..."
 		sh downloads/Hexagon.LLVM_linux_installer_7.2.10.bin -i silent
 	else
 		echo "Failed to untar downloads/Hexagon.LNX.7.2\ Installer-07210.1.tar"
@@ -147,9 +153,6 @@ if [ ! -f ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED ]; then
 	echo "Unpacking sysroot..."
 	tar -C ${HEXAGON_ARM_SYSROOT} --exclude="dev/*" -xJf downloads/ubuntu-trusty-14.04-armhf.com-20140603.tar.xz && echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED
 fi
-
-# Extra packages to add to install to sysroot
-EXTRA_PACKAGES=""
 
 # fakechroot is used to install additional packages without using sudo
 # It requires a little extra magic to make it work with misc-binfmt and qemu
