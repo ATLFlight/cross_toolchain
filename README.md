@@ -1,16 +1,11 @@
 # cross_toolchain
 
-This project will install the apps processor cross compiler and sysroot
-for use with Snapdragon Flight
+This project will install the Hexagon SDK, Hexagon cross compiler, armhf cross compiler, and armhf sysroot
+for Snapdragon Flight application development.
 
 ## Installation
-Install the Hexagon SDK 2.0 and then set the HEXAGON_SDK_ROOT
-(i.e. export HEXAGON_SDK_ROOT=${HOME}/Qualcomm/Hexagon_SDK/2.0
 
-See https://github.com/ATLFlight/ATLFlightDocs/blob/master/GettingStarted.md
-
-### Clone and build this project
-
+Clone and build this project:
 ```
 git clone https://github.com/ATLFlight/cross_toolchain.git
 cd cross_toolchain
@@ -19,7 +14,13 @@ cd cross_toolchain
 
 This will install:
 
-Cross compiler at: ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux
+Hexagon SDK [HEXAGON_SDK_ROOT]: ${HOME}/Qualcomm/Hexagon_SDK/2.0
 
-Sysroot at: ${HEXAGON_SDK_ROOT}/sysroot
+Hexagon Tools [HEXAGON_TOOLS_ROOT]: ${HOME}/Qualcomm/HEXAGON_Tools/7.2.10/Tools
 
+armhf cross compiler: ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux
+
+armhf sysroot [HEXAGON_ARM_SYSROOT]: ${HEXAGON_SDK_ROOT}/sysroot
+
+If HEXAGON_TOOLS_ROOT is set to ${HOME}/Qualcomm/HEXAGON_Tools/6.4.06 prior to running install.sh, then that version of Tools
+can be installed from the Hexagon SDK installer and Hexagon Tools 7.2.10 will not be installed.
