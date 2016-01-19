@@ -39,14 +39,10 @@ function fail_on_errors() {
    exit 1;
 }
 
-if [ ! -f /usr/bin/qemu-arm-static ]; then
-	echo "Install of qemu-user-static requires sudo"
-	sudo apt-get install -y qemu-user-static
-fi
-
-if [ ! -f /usr/bin/fakechroot ]; then
-	echo "Install of qemu-user-static requires sudo"
-	sudo apt-get install -y fakechroot
+# Install package deps
+if [ ! -f /usr/bin/qemu-arm-static ] || [ ! -f /usr/bin/fakechroot ]; then
+	echo "Please install qemu-user-static and fakechroot"
+	echo "sudo apt-get install qemu-user-static fakechroot"
 fi
 
 if [ "${HEXAGON_TOOLS_ROOT}" = "" ]; then
@@ -65,6 +61,15 @@ fi
 read -r -p "${1:-HEXAGON_TOOLS_ROOT [${HEXAGON_TOOLS_ROOT}]} " response
 if [ ! "$response" = "" ]; then
 	HEXAGON_TOOLS_ROOT=$response
+fi
+
+if [ "${HEXAGON_ARM_SYSROOT}" = "" ]; then
+	HEXAGON_ARM_SYSROOT=${HEXAGON_SDK_ROOT}/sysroot
+fi
+
+read -r -p "${1:-HEXAGON_ARM_SYSROOT [${HEXAGON_ARM_SYSROOT}]} " response
+if [ ! "$response" = "" ]; then
+	HEXAGON_ARM_SYSROOT=$response
 fi
 
 if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic ]; then
@@ -125,56 +130,71 @@ if [ ! -f downloads/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz ]; t
 fi
 
 # Fetch Ubuntu 14.04 ARM image
-if [ ! -f downloads/ubuntu-core-14.04-core-armhf.tar.gz ]; then
-	wget -P downloads http://cdimage.ubuntu.com/ubuntu-core/releases/14.04.3/release/ubuntu-core-14.04-core-armhf.tar.gz
+if [ ! -f downloads/ubuntu-trusty-14.04-armhf.com-20140603.tar.xz ]; then
+	#wget -P downloads http://cdimage.ubuntu.com/ubuntu-core/releases/14.04.3/release/ubuntu-core-14.04-core-armhf.tar.gz
+	wget -P downloads http://s3.armhf.com/dist/basefs/ubuntu-trusty-14.04-armhf.com-20140603.tar.xz
 fi
 
 if [ ! -d ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux ]; then
 	tar -C ${HEXAGON_SDK_ROOT} -xJf downloads/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz
 fi
 
-if [ ! -f ${HEXAGON_SDK_ROOT}/sysroot/SYSROOT_UNPACKED ]; then
-	mkdir -p ${HEXAGON_SDK_ROOT}/sysroot
-	tar -C ${HEXAGON_SDK_ROOT}/sysroot --exclude="dev/*" -xzf downloads/ubuntu-core-14.04-core-armhf.tar.gz
-	echo "${HEXAGON_SDK_ROOT}/sysroot" > ${HEXAGON_SDK_ROOT}/sysroot/SYSROOT_UNPACKED
+if [ ! -f ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED ]; then
+	mkdir -p ${HEXAGON_ARM_SYSROOT}
+	tar -C ${HEXAGON_ARM_SYSROOT} --exclude="dev/*" -xJf downloads/ubuntu-trusty-14.04-armhf.com-20140603.tar.xz && echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED
 fi
 
+# Extra packages to add to downloaded sysroot
+EXTRA_PACKAGES=""
 
-# Copy qemu-arm-static to sysroot to install more packages
-cp /usr/bin/qemu-arm-static ${HEXAGON_SDK_ROOT}/sysroot/usr/bin/qemu-arm-static
+# fakechroot is used to install additional packages without using sudo
+# It requires a little extra magic to make it work with misc-binfmt and qemu
+if [ ! "${EXTRA_PACKAGES}" = "" ]; then
+	# Copy qemu-arm-static to sysroot to install more packages
+	cp /usr/bin/qemu-arm-static ${HEXAGON_ARM_SYSROOT}/usr/bin/qemu-arm-static
 
-function unmount_sysroot {
-	echo "Unmounting sysroot mounts"
-	if mount | grep ${HEXAGON_SDK_ROOT}/sysroot/sys > /dev/null; then
-		sudo umount ${HEXAGON_SDK_ROOT}/sysroot/sys
+	pushd .
+	cd downloads
+	# Get ARM libc to use with qemu-arm-static
+	if [ ! -f fakechroot_2.17.2-1_all.deb ]; then 
+		wget http://launchpadlibrarian.net/172662762/libc6_2.19-0ubuntu6_armhf.deb
 	fi
-	if mount | grep ${HEXAGON_SDK_ROOT}/sysroot/proc > /dev/null; then
-		sudo umount ${HEXAGON_SDK_ROOT}/sysroot/proc
+
+	# Get armhf libs to enable fakechroot to work under qemu
+	if [ ! -f libfakeroot_1.20-3ubuntu2_armhf.deb ]; then 
+		wget http://launchpadlibrarian.net/170520929/libfakeroot_1.20-3ubuntu2_armhf.deb
 	fi
-	if mount | grep ${HEXAGON_SDK_ROOT}/sysroot/dev > /dev/null; then
-		sudo umount ${HEXAGON_SDK_ROOT}/sysroot/dev
+	if [ ! -f libfakechroot_2.17.1-2_armhf.deb ]; then 
+		wget http://launchpadlibrarian.net/159987636/libfakechroot_2.17.1-2_armhf.deb
 	fi
-}
+	popd 
 
-function mount_sysroot {
-	echo "mounting sysroot mounts"
-	sudo mount -o bind /dev ${HEXAGON_SDK_ROOT}/sysroot/dev
-	sudo mount -o bind /sys ${HEXAGON_SDK_ROOT}/sysroot/sys
-	sudo mount -t proc /proc ${HEXAGON_SDK_ROOT}/sysroot/proc
-	sudo cp /proc/mounts ${HEXAGON_SDK_ROOT}/sysroot/etc/mtab
-}
+	# The environment variable QEMU_LD_PREFIX must be set to point to the directory containing the armhf libc
+	mkdir -p qemu-binfmt-arm
+	if [ ! -f qemu-binfmt-arm/lib/ld-linux-armhf.so.3 ]; then
+		dpkg -x downloads/libc6_2.19-0ubuntu6_armhf.deb qemu-binfmt-arm
+	fi
 
-# Add needed packages to sysroot
-if [ ! -f ${HEXAGON_SDK_ROOT}/sysroot/SYSROOT_CONFIGURED ]; then
-	fakechroot fakeroot /usr/sbin/chroot ${HEXAGON_SDK_ROOT}/sysroot /setup.sh
+	# Install armhf libs in sysroot to enable fakechroot to work under qemu
+	if [ ! -f ${HEXAGON_ARM_SYSROOT}/usr/lib/arm-linux-gnueabihf/libfakeroot-sysv.so ]; then
+		dpkg-deb --fsys-tarfile downloads/libfakeroot_1.20-3ubuntu2_armhf.deb | \
+			tar -C ${HEXAGON_ARM_SYSROOT}/usr/lib/arm-linux-gnueabihf \
+				--strip-components=5 -xf - ./usr/lib/arm-linux-gnueabihf/libfakeroot/libfakeroot-sysv.so
+	fi
+	if [ ! -f ${HEXAGON_ARM_SYSROOT}/usr/lib/arm-linux-gnueabihf/libfakechroot.so ]; then
+		dpkg-deb --fsys-tarfile downloads/libfakechroot_2.17.1-2_armhf.deb | \
+			tar -C ${HEXAGON_ARM_SYSROOT}/usr/lib/arm-linux-gnueabihf \
+				--strip-components=5 -xf - ./usr/lib/arm-linux-gnueabihf/fakechroot/libfakechroot.so
+	fi
 
-#	unmount_sysroot
-#	mount_sysroot
-#	echo "Installing required packages"
-#	cp setup.sh ${HEXAGON_SDK_ROOT}/sysroot/setup.sh
-#	sudo chroot ${HEXAGON_SDK_ROOT}/sysroot /setup.sh
-#	unmount_sysroot
-	touch ${HEXAGON_SDK_ROOT}/sysroot/SYSROOT_CONFIGURED
+	# Add extra packages to sysroot
+	if [ ! -f ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED ]; then
+		rm -f ${HEXAGON_ARM_SYSROOT}/etc/resolv.conf
+		cp /etc/resolv.conf ${HEXAGON_ARM_SYSROOT}/etc/
+		export QEMU_LD_PREFIX=`pwd`/qemu-binfmt-arm
+		fakechroot chroot ${HEXAGON_ARM_SYSROOT} apt-get update
+		fakechroot chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED
+	fi
 fi
 
 echo "Cross compiler is at: ${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux"
@@ -182,5 +202,6 @@ echo "Sysroot is at:        ${HEXAGON_SDK_ROOT}/sysroot"
 echo "Make sure to set the following environment variables:"
 echo "   export HEXAGON_SDK_ROOT=${HEXAGON_SDK_ROOT}"
 echo "   export HEXAGON_TOOLS_ROOT=${HEXAGON_TOOLS_ROOT}"
-echo "   export HEXAGON_ARM_SYSROOT=${HEXAGON_SDK_ROOT}/sysroot"
+echo "   export HEXAGON_ARM_SYSROOT=${HEXAGON_ARM_SYSROOT}"
+echo "   export PATH=\${HEXAGON_SDK_ROOT}/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux:\$PATH"
 echo Done
