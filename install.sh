@@ -82,7 +82,13 @@ if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic ]; then
 	echo "Hexagon SDK not installed ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic"
 	if [ -f downloads/qualcomm_hexagon_sdk_2_0_eval.bin ]; then
 		echo "Installing HEXAGON_SDK to ${HEXAGON_SDK_ROOT}"
+		echo
+		echo "***************************************************************************"
+		echo "NOTE: "
 		echo "You can un-check all 3 add-on options (Android NDK, Eclipse, Hexagon Tools)"
+		echo "in the installer screen
+		echo "***************************************************************************"
+		echo
 		sh ./downloads/qualcomm_hexagon_sdk_2_0_eval.bin -i swing -DUSER_INSTALL_DIR=${HEXAGON_SDK_ROOT}
 	else
 		echo "Put the file qualcomm_hexagon_sdk_2_0_eval.bin in the downloads directory"
