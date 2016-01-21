@@ -118,6 +118,14 @@ if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Linux/qaic ]; then
 	popd
 fi
 
+if [ ! -f ${HEXAGON_SDK_ROOT}/lib/common/rpcmem/UbuntuARM_Debug/rpcmem.a ]; then
+	pushd .
+	cd ${HEXAGON_SDK_ROOT}/lib/common/rpcmem
+	make V=UbuntuARM_Debug
+	make V=UbuntuARM_Release
+	popd
+fi
+
 # Verify setup is complete
 if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Linux/qaic ]; then
 	echo "Failed to set up Hexagon SDK"
