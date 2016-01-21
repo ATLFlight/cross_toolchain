@@ -47,10 +47,10 @@ function fail_on_errors() {
 EXTRA_PACKAGES=""
 
 # Install package deps
-if [ ! -f /usr/bin/qemu-arm-static ] || [ ! -f /usr/bin/fakechroot ]; then
+if [ ! -f /usr/bin/fakechroot ]; then
 	if [ ! "${EXTRA_PACKAGES}" = "" ]; then
-		echo "Please install qemu-user-static and fakechroot"
-		echo "sudo apt-get install qemu-user-static fakechroot"
+		echo "Please install fakechroot"
+		echo "sudo apt-get install fakechroot"
 	fi
 fi
 
@@ -166,9 +166,8 @@ if [ ! -f downloads/gcc-linaro-arm-linux-gnueabihf-4.8-2013.08_linux.tar.xz ]; t
 fi
 
 # Fetch Ubuntu 14.04 ARM image for sysroot
-if [ ! -f downloads/ubuntu-trusty-14.04-armhf.com-20140603.tar.xz ]; then
-	#wget -P downloads http://cdimage.ubuntu.com/ubuntu-core/releases/14.04.3/release/ubuntu-core-14.04-core-armhf.tar.gz
-	wget -P downloads http://s3.armhf.com/dist/basefs/ubuntu-trusty-14.04-armhf.com-20140603.tar.xz
+if [ ! -f downloads/linaro-trusty-developer-20140922-682.tar.gz ]; then
+	wget -P downloads http://releases.linaro.org/14.09/ubuntu/trusty-images/developer/linaro-trusty-developer-20140922-682.tar.gz
 fi
 
 # Unpack armhf cross compiler
@@ -181,14 +180,14 @@ fi
 if [ ! -f ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED ]; then
 	mkdir -p ${HEXAGON_ARM_SYSROOT}
 	echo "Unpacking sysroot..."
-	tar -C ${HEXAGON_ARM_SYSROOT} --exclude="dev/*" -xJf downloads/ubuntu-trusty-14.04-armhf.com-20140603.tar.xz && echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED
+	tar -C ${HEXAGON_ARM_SYSROOT} --strip-components=1 --exclude="dev/*" -xzf downloads/linaro-trusty-developer-20140922-682.tar.gz && echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED
 fi
 
 # fakechroot is used to install additional packages without using sudo
 # It requires a little extra magic to make it work with misc-binfmt and qemu
 if [ ! "${EXTRA_PACKAGES}" = "" ]; then
-	# Copy qemu-arm-static to sysroot to install more packages
-	cp /usr/bin/qemu-arm-static ${HEXAGON_ARM_SYSROOT}/usr/bin/qemu-arm-static
+
+	# Linaro Trusty image contains qemu-arm-static so no need to copy over
 
 	pushd .
 	cd downloads
@@ -229,8 +228,10 @@ if [ ! "${EXTRA_PACKAGES}" = "" ]; then
 		rm -f ${HEXAGON_ARM_SYSROOT}/etc/resolv.conf
 		cp /etc/resolv.conf ${HEXAGON_ARM_SYSROOT}/etc/
 		export QEMU_LD_PREFIX=`pwd`/qemu-binfmt-arm
-		fakechroot chroot ${HEXAGON_ARM_SYSROOT} apt-get update
-		fakechroot chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED
+		if [ ! -f ${HEXAGON_ARM_SYSROOT}/UPDATED ]; then
+			fakechroot chroot ${HEXAGON_ARM_SYSROOT} apt-get update && touch ${HEXAGON_ARM_SYSROOT}/UPDATED
+		fi
+		fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED
 	fi
 fi
 
