@@ -36,6 +36,10 @@
 #    export HEXAGON_TOOLS_ROOT=${HOME}/Qualcomm/HEXAGON_Tools/6.4.06
 # Otherwise, the default is that the Hexagon Tools 7.2.10 are installed.
 
+
+# This must be run from the local dir
+cd `dirname $0`
+
 trap fail_on_error ERR
 
 function fail_on_errors() {
