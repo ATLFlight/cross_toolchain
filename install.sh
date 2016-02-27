@@ -104,12 +104,14 @@ if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic ]; then
 	fi
 fi
 
+echo "Verifying required tools were installed..."
 # Verify required tools were installed
 if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic ] || [ ! -f ${HEXAGON_SDK_ROOT}/tools/mini-dm/Linux_Debug/mini-dm ]; then
 	echo "Failed to install Hexagon SDK"
 	exit 1
 fi
 
+echo "Running 'make' in ${HEXAGON_SDK_ROOT}/tools/qaic..."
 # Set up the Hexagon SDK
 if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Linux/qaic ]; then
 	pushd .
@@ -118,14 +120,7 @@ if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Linux/qaic ]; then
 	popd
 fi
 
-if [ ! -f ${HEXAGON_SDK_ROOT}/lib/common/rpcmem/UbuntuARM_Debug/rpcmem.a ]; then
-	pushd .
-	cd ${HEXAGON_SDK_ROOT}/lib/common/rpcmem
-	make V=UbuntuARM_Debug
-	make V=UbuntuARM_Release
-	popd
-fi
-
+echo "Verifying setup is complete..."
 # Verify setup is complete
 if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Linux/qaic ]; then
 	echo "Failed to set up Hexagon SDK"
@@ -189,6 +184,15 @@ if [ ! -f ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED ]; then
 	mkdir -p ${HEXAGON_ARM_SYSROOT}
 	echo "Unpacking sysroot..."
 	tar -C ${HEXAGON_ARM_SYSROOT} --strip-components=1 --exclude="dev/*" -xzf downloads/linaro-trusty-developer-20140922-682.tar.gz && echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED
+fi
+
+
+if [ ! -f ${HEXAGON_SDK_ROOT}/lib/common/rpcmem/UbuntuARM_Debug/rpcmem.a ]; then
+	pushd .
+	cd ${HEXAGON_SDK_ROOT}/lib/common/rpcmem
+	make V=UbuntuARM_Debug
+	make V=UbuntuARM_Release
+	popd
 fi
 
 # fakechroot is used to install additional packages without using sudo
