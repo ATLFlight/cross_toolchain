@@ -48,7 +48,7 @@ function fail_on_errors() {
 }
 
 # Extra packages to add to install to armhf sysroot
-EXTRA_PACKAGES=""
+EXTRA_PACKAGES="libncurses5-dev"
 
 # Install package deps
 if [ ! -f /usr/bin/fakechroot ]; then
@@ -208,7 +208,7 @@ if [ ! "${EXTRA_PACKAGES}" = "" ]; then
 	pushd .
 	cd downloads
 	# Get ARM libc to use with qemu-arm-static
-	if [ ! -f fakechroot_2.17.2-1_all.deb ]; then 
+	if [ ! -f libc6_2.19-0ubuntu6_armhf.deb ]; then 
 		wget http://launchpadlibrarian.net/172662762/libc6_2.19-0ubuntu6_armhf.deb
 	fi
 
