@@ -221,12 +221,6 @@ if [ ! "${EXTRA_PACKAGES}" = "" ]; then
 	fi
 	popd 
 
-	# The environment variable QEMU_LD_PREFIX must be set to point to the directory containing the armhf libc
-	mkdir -p qemu-binfmt-arm
-	if [ ! -f qemu-binfmt-arm/lib/ld-linux-armhf.so.3 ]; then
-		dpkg -x downloads/libc6_2.19-0ubuntu6_armhf.deb qemu-binfmt-arm
-	fi
-
 	# Install armhf libs in sysroot to enable fakechroot to work under qemu
 	if [ ! -f ${HEXAGON_ARM_SYSROOT}/usr/lib/arm-linux-gnueabihf/libfakeroot-sysv.so ]; then
 		dpkg-deb --fsys-tarfile downloads/libfakeroot_1.20-3ubuntu2_armhf.deb | \
@@ -243,7 +237,7 @@ if [ ! "${EXTRA_PACKAGES}" = "" ]; then
 	if [ ! -f ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED ]; then
 		rm -f ${HEXAGON_ARM_SYSROOT}/etc/resolv.conf
 		cp /etc/resolv.conf ${HEXAGON_ARM_SYSROOT}/etc/
-		export QEMU_LD_PREFIX=`pwd`/qemu-binfmt-arm
+		export QEMU_LD_PREFIX=${HEXAGON_ARM_SYSROOT}
 		if [ ! -f ${HEXAGON_ARM_SYSROOT}/UPDATED ]; then
 			fakechroot chroot ${HEXAGON_ARM_SYSROOT} apt-get update && touch ${HEXAGON_ARM_SYSROOT}/UPDATED
 		fi
