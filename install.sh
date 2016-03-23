@@ -54,7 +54,7 @@ EXTRA_PACKAGES="libncurses5-dev"
 if [ ! -f /usr/bin/fakechroot ]; then
 	if [ ! "${EXTRA_PACKAGES}" = "" ]; then
 		echo "Please install fakechroot"
-		echo "sudo apt-get install fakechroot"
+		echo "sudo apt-get install fakechroot fakeroot"
 	fi
 fi
 
@@ -241,7 +241,13 @@ if [ ! "${EXTRA_PACKAGES}" = "" ]; then
 		if [ ! -f ${HEXAGON_ARM_SYSROOT}/UPDATED ]; then
 			fakechroot chroot ${HEXAGON_ARM_SYSROOT} apt-get update && touch ${HEXAGON_ARM_SYSROOT}/UPDATED
 		fi
-		fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED
+
+		# fakeroot is broken on Ubuntu 12.04
+		if [ "`lsb_release -r | grep 12.04`" = "" ]; then
+			fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED
+		else
+			sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED
+		fi
 	fi
 fi
 
