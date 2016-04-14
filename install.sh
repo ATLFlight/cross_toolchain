@@ -135,20 +135,14 @@ fi
 if [[ ${HEXAGON_TOOLS_ROOT} = */7.2.10/Tools ]] ; then
 	if [ ! -f ${HEXAGON_TOOLS_ROOT}/bin/hexagon-clang ]; then
 
-		if [ -f downloads/Hexagon.LNX.7.2\ Installer-07210.1.tar ]; then
-			tar -C downloads -xf downloads/Hexagon.LNX.7.2\ Installer-07210.1.tar
-		else
-			echo "Put the file Hexagon.LNX.7.2\ Installer-07210.1.tar in the downloads directory"
-			echo "and re-run this script"
-			exit 1
-		fi
-
 		if [ -f downloads/Hexagon.LLVM_linux_installer_7.2.10.bin ]; then
 			echo "Installing Hexagon Tools 7.2.10 ..."
 			sh downloads/Hexagon.LLVM_linux_installer_7.2.10.bin -DUSER_INSTALL_DIR=${HEXAGON_TOOLS_ROOT}
 		else
-			echo "Failed to untar downloads/Hexagon.LNX.7.2\ Installer-07210.1.tar"
 			echo "Missing downloads/Hexagon.LLVM_linux_installer_7.2.10.bin"
+			echo "Put the file Hexagon.LLVM_linux_installer_7.2.10.bin in the downloads directory"
+			echo "(https://developer.qualcomm.com/download/hexagon/hexagon-sdk-linux.bin)"
+			echo "If you received Hexagon.LNX.7.2\ Installer-07210.1.tar, untar the file in the downloads directory"
 			exit 1
 		fi
 
