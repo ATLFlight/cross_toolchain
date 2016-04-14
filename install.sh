@@ -43,18 +43,19 @@ cd `dirname $0`
 trap fail_on_error ERR
 
 function fail_on_errors() {
-   echo "Error: Script aborted";
-   exit 1;
+	echo "Error: Script aborted";
+	exit 1;
 }
 
 # Extra packages to add to install to armhf sysroot
 EXTRA_PACKAGES="libncurses5-dev"
 
 # Install package deps
-if [ ! -f /usr/bin/fakechroot ]; then
+if [ ! -f /usr/bin/fakechroot ] || [ ! -f /usr/bin/qemu-arm-static ]; then
 	if [ ! "${EXTRA_PACKAGES}" = "" ]; then
-		echo "Please install fakechroot"
-		echo "sudo apt-get install fakechroot fakeroot"
+		echo "Please install fakechroot and qemu-system-arm"
+		echo "sudo apt-get install fakechroot fakeroot qemu-user-static"
+		exit 1;
 	fi
 fi
 
