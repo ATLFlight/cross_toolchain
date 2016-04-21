@@ -137,7 +137,7 @@ if [[ ${HEXAGON_TOOLS_ROOT} = */7.2.10/Tools ]] ; then
 
 		if [ -f downloads/Hexagon.LLVM_linux_installer_7.2.10.bin ]; then
 			echo "Installing Hexagon Tools 7.2.10 ..."
-			sh downloads/Hexagon.LLVM_linux_installer_7.2.10.bin -DUSER_INSTALL_DIR=${HEXAGON_TOOLS_ROOT}
+			sh downloads/Hexagon.LLVM_linux_installer_7.2.10.bin -DUSER_INSTALL_DIR=${HEXAGON_TOOLS_ROOT}/..
 		else
 			echo "Missing downloads/Hexagon.LLVM_linux_installer_7.2.10.bin"
 			echo "Put the file Hexagon.LLVM_linux_installer_7.2.10.bin in the downloads directory"
