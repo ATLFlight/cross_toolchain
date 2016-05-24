@@ -32,11 +32,15 @@
 #
 ############################################################################
 
-# Installer script for Ubuntu 14.04 ARMv7hf sysroot
+# Installer script for QRLinux ARMv7hf sysroot
 
-# Fetch Ubuntu 14.04 ARM image for sysroot
-if [ ! -f downloads/linaro-trusty-developer-20140922-682.tar.gz ]; then
-	wget -P downloads http://releases.linaro.org/14.09/ubuntu/trusty-images/developer/linaro-trusty-developer-20140922-682.tar.gz
+# Verify the qrlSDK.zip was downloaded from Intrinsyc
+if [ ! -f downloads/Flight_qrlSDK.zip ]; then
+	echo
+	echo "Please put the Flight_qrlSDK.zip file from the following link into the downloads"
+	echo "directory and re-run this script:"
+	echo "   http://support.intrinsyc.com/attachments/download/483/Flight_qrlSDK.zip"
+	exit 1
 fi
 
 # Extra packages to add to install to armhf sysroot
@@ -62,19 +66,44 @@ if [ "${HEXAGON_ARM_SYSROOT}" = "" ]; then
 		exit 1
 	fi
 
-	HEXAGON_ARM_SYSROOT=${HOME}/Qualcomm/ubuntu_14.04_armv7_sysroot
+	HEXAGON_ARM_SYSROOT=${HOME}/Qualcomm/qrlinux_v1.0_sysroot
 fi
 
-read -r -p "${1:-HEXAGON_ARM_SYSROOT [${HEXAGON_ARM_SYSROOT}]} " response
-if [ ! "$response" = "" ]; then
-	HEXAGON_ARM_SYSROOT=$response
+if [[ ${HEXAGON_ARM_SYSROOT} = */Qualcomm/qrlinux_v1.0_sysroot ]]; then
+	echo "Installing QRLinux sysroot"
+else
+	echo "Invalid install path for HEXAGON_ARM_SYSROOT"
+fi
+
+if [ "$1" = "--clean" ]; then
+	if [ -d ${HEXAGON_ARM_SYSROOT} ]; then
+		echo "Removing previous QRLinux sysroot installation"
+		rm -rf ${HEXAGON_ARM_SYSROOT}
+	fi
 fi
 
 # Unpack sysroot 
-if [ ! -f ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED ]; then
+if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED ]; then
 	mkdir -p ${HEXAGON_ARM_SYSROOT}
 	echo "Unpacking sysroot..."
-	tar -C ${HEXAGON_ARM_SYSROOT} --strip-components=1 --exclude="dev/*" -xzf downloads/linaro-trusty-developer-20140922-682.tar.gz && echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED
+	if [ ! -d downloads/Flight_qrlSDK ]; then
+		echo "Extracting qrlSDK zip file"
+		cd downloads && unzip Flight_qrlSDK.zip
+		cd ..
+	fi
+	if [ ! -f downloads/Flight_qrlSDK/qrlSysroots.tgz ]; then
+		echo "QRLinux SDK unpack failed"
+		exit 1
+	fi
+	
+	echo "Extracting qrlSDK tar file"
+	if [ ! -d downloads/Flight_qrlSDK/sysroots/eagle8074/linaro-rootfs ]; then
+		tar -C downloads/Flight_qrlSDK --exclude="dev/*" -xzf downloads/Flight_qrlSDK/qrlSysroots.tgz sysroots/eagle8074/linaro-rootfs
+	fi
+	mkdir -p ${HEXAGON_ARM_SYSROOT}
+	echo "copying to ${HEXAGON_ARM_SYSROOT}"
+	cp -arp downloads/Flight_qrlSDK/sysroots/eagle8074/linaro-rootfs/* ${HEXAGON_ARM_SYSROOT}
+	echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED
 fi
 
 # fakechroot is used to install additional packages without using sudo
@@ -112,19 +141,19 @@ if [ ! "${EXTRA_PACKAGES}" = "" ]; then
 	fi
 
 	# Add extra packages to sysroot
-	if [ ! -f ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED ]; then
+	if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_CONFIGURED ]; then
 		rm -f ${HEXAGON_ARM_SYSROOT}/etc/resolv.conf
 		cp /etc/resolv.conf ${HEXAGON_ARM_SYSROOT}/etc/
 		export QEMU_LD_PREFIX=${HEXAGON_ARM_SYSROOT}
-		if [ ! -f ${HEXAGON_ARM_SYSROOT}/UPDATED ]; then
-			fakechroot chroot ${HEXAGON_ARM_SYSROOT} apt-get update && touch ${HEXAGON_ARM_SYSROOT}/UPDATED
+		if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/UPDATED ]; then
+			fakechroot chroot ${HEXAGON_ARM_SYSROOT} apt-get update && touch ${HEXAGON_ARM_SYSROOT}/var/opt/UPDATED
 		fi
 
 		# fakeroot is broken on Ubuntu 12.04
 		if [ "`lsb_release -r | grep 12.04`" = "" ]; then
-			fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED
+			fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_CONFIGURED
 		else
-			sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED
+			sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_CONFIGURED
 		fi
 	fi
 fi

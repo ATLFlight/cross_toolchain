@@ -123,11 +123,6 @@ if [ ! -f downloads/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz ]; 
 	wget -P downloads https://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz
 fi
 
-# Fetch Ubuntu 14.04 ARM image for sysroot
-if [ ! -f downloads/linaro-trusty-developer-20140922-682.tar.gz ]; then
-	wget -P downloads http://releases.linaro.org/14.09/ubuntu/trusty-images/developer/linaro-trusty-developer-20140922-682.tar.gz
-fi
-
 # Unpack armhf cross compiler
 if [ ! -d ${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf_linux ]; then
 	echo "Unpacking cross compiler..."
