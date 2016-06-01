@@ -1,6 +1,6 @@
 # cross_toolchain
 
-This project will install the Hexagon SDK 3.0, ARMv7hf cross compiler, ARMv7hf cross compiler, and ARMv7hf Ubuntu Trusty (14.04) sysroot
+This project will install the Hexagon SDK 3.0, ARMv7hf cross compiler, and an ARMv7hf sysroot
 for Snapdragon Flight application development.
 
 ## SDK Installation
