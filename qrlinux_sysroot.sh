@@ -73,6 +73,7 @@ if [[ ${HEXAGON_ARM_SYSROOT} = */Qualcomm/qrlinux_v1.0_sysroot ]]; then
 	echo "Installing QRLinux sysroot"
 else
 	echo "Invalid install path for HEXAGON_ARM_SYSROOT"
+    exit 1
 fi
 
 if [ "$1" = "--clean" ]; then
