@@ -73,6 +73,7 @@ if [[ ${HEXAGON_ARM_SYSROOT} = */Qualcomm/qrlinux_v1.0_sysroot ]]; then
 	echo "Installing QRLinux sysroot"
 else
 	echo "Invalid install path for HEXAGON_ARM_SYSROOT"
+	exit 1
 fi
 
 if [ "$1" = "--clean" ]; then
@@ -82,7 +83,7 @@ if [ "$1" = "--clean" ]; then
 	fi
 fi
 
-# Unpack sysroot 
+# Unpack sysroot
 if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED ]; then
 	mkdir -p ${HEXAGON_ARM_SYSROOT}
 	echo "Unpacking sysroot..."
@@ -95,7 +96,7 @@ if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED ]; then
 		echo "QRLinux SDK unpack failed"
 		exit 1
 	fi
-	
+
 	echo "Extracting qrlSDK tar file"
 	if [ ! -d downloads/Flight_qrlSDK/sysroots/eagle8074/linaro-rootfs ]; then
 		tar -C downloads/Flight_qrlSDK --exclude="dev/*" -xzf downloads/Flight_qrlSDK/qrlSysroots.tgz sysroots/eagle8074/linaro-rootfs
@@ -115,18 +116,18 @@ if [ ! "${EXTRA_PACKAGES}" = "" ]; then
 	pushd .
 	cd downloads
 	# Get ARM libc to use with qemu-arm-static
-	if [ ! -f libc6_2.19-0ubuntu6_armhf.deb ]; then 
+	if [ ! -f libc6_2.19-0ubuntu6_armhf.deb ]; then
 		wget http://launchpadlibrarian.net/172662762/libc6_2.19-0ubuntu6_armhf.deb
 	fi
 
 	# Get armhf libs to enable fakechroot to work under qemu
-	if [ ! -f libfakeroot_1.20-3ubuntu2_armhf.deb ]; then 
+	if [ ! -f libfakeroot_1.20-3ubuntu2_armhf.deb ]; then
 		wget http://launchpadlibrarian.net/170520929/libfakeroot_1.20-3ubuntu2_armhf.deb
 	fi
-	if [ ! -f libfakechroot_2.17.1-2_armhf.deb ]; then 
+	if [ ! -f libfakechroot_2.17.1-2_armhf.deb ]; then
 		wget http://launchpadlibrarian.net/159987636/libfakechroot_2.17.1-2_armhf.deb
 	fi
-	popd 
+	popd
 
 	# Install armhf libs in sysroot to enable fakechroot to work under qemu
 	if [ ! -f ${HEXAGON_ARM_SYSROOT}/usr/lib/arm-linux-gnueabihf/libfakeroot-sysv.so ]; then

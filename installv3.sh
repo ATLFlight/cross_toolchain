@@ -39,7 +39,7 @@ cd `dirname $0`
 
 trap fail_on_error ERR
 
-function fail_on_errors() {
+function fail_on_error() {
 	echo "Error: Script aborted";
 	exit 1;
 }
