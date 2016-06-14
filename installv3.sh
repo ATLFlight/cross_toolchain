@@ -45,7 +45,9 @@ function fail_on_error() {
 }
 
 # If HEXAGON_SDK_ROOT is set, deduce what HOME should be
-echo ${HEXAGON_SDK_ROOT}
+if [ ! "${HEXAGON_SDK_ROOT}" = "" ]; then
+	echo "HEXAGON_SDK_ROOT currently set to: ${HEXAGON_SDK_ROOT}"
+fi
 if [[ ${HEXAGON_SDK_ROOT} = */Qualcomm/Hexagon_SDK/3.0 ]]; then
 	HOME=`echo ${HEXAGON_SDK_ROOT} | sed -e "s#/Qualcomm/Hexagon_SDK/.*##"`
 fi
@@ -58,7 +60,7 @@ fi
 HEXAGON_SDK_ROOT=${HOME}/Qualcomm/Hexagon_SDK/3.0
 HEXAGON_TOOLS_ROOT=${HOME}/Qualcomm/HEXAGON_Tools/7.2.12/Tools
 
-echo "Setting the following:"
+echo "Using the following for installation:"
 echo HEXAGON_SDK_ROOT=${HEXAGON_SDK_ROOT}
 echo HEXAGON_TOOLS_ROOT=${HEXAGON_TOOLS_ROOT}
 
@@ -69,7 +71,7 @@ if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic ]; then
 		echo
 		echo "Installing HEXAGON_SDK to ${HEXAGON_SDK_ROOT}"
 		echo "This will take a long time."
-		sh ./downloads/qualcomm_hexagon_sdk_lnx_3_0_eval.bin -i silent -DANDROID_FOUND_VARIABLE=false -DECLIPSE_FOUND_VARIABLE=false -DUSER_INSTALL_DIR=${HEXAGON_SDK_ROOT}
+		sh ./downloads/qualcomm_hexagon_sdk_lnx_3_0_eval.bin -DDOWNLOAD_ECLIPSE=false -DDOWNLOAD_ANDROID=false -DDOWNLOAD_TOOLS=true -DUSER_INSTALL_DIR=${HEXAGON_SDK_ROOT} -i silent
 	else
 		echo
 		echo "Put the file qualcomm_hexagon_sdk_lnx_3_0_eval.bin in the downloads directory"
