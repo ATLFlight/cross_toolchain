@@ -37,6 +37,12 @@
 # This must be run from the local dir
 cd `dirname $0`
 
+TRIM=0
+if [ "$1" = "-trim" ]; then
+	TRIM=1
+	shift
+fi
+
 trap fail_on_error ERR
 
 function fail_on_error() {
@@ -139,6 +145,54 @@ if [ ! -f ${HEXAGON_SDK_ROOT}/libs/common/rpcmem/UbuntuARM_Debug/rpcmem.a ]; the
 	make V=UbuntuARM_Debug
 	make V=UbuntuARM_Release
 	popd
+fi
+
+# Reduce the size of the installed SDK to only the files needed for build
+if [ "${TRIM}" = "1" ]; then
+	
+	if [ ! "${HEXAGON_SDK_ROOT}" = "" ]; then
+
+		# Trim unused files from HEXAGON SDK
+		rm -rf ${HEXAGON_SDK_ROOT}/build
+		rm -rf ${HEXAGON_SDK_ROOT}/docs
+		rm -rf ${HEXAGON_SDK_ROOT}/examples
+		rm -rf ${HEXAGON_SDK_ROOT}/libs/camera_streaming
+		find ${HEXAGON_SDK_ROOT} -name "*_toolv74" | xargs rm -rf
+		find ${HEXAGON_SDK_ROOT} -name "*_toolv74_*" | xargs rm -rf
+		rm -rf ${HEXAGON_SDK_ROOT}/tools/android-ndk-r10d
+		rm -rf ${HEXAGON_SDK_ROOT}/tools/hexagon_ide
+		rm -rf ${HEXAGON_SDK_ROOT}/tools/Installer_logs
+		rm -rf ${HEXAGON_SDK_ROOT}/tools/qaic/Darwin
+		rm -rf ${HEXAGON_SDK_ROOT}/tools/qaic/Linux_DoNotShip
+		rm -rf ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu10
+		rm -rf ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu12
+		rm -rf ${HEXAGON_SDK_ROOT}/tools/utils
+
+		strip ${HEXAGON_SDK_ROOT}/tools/debug/mini-dm/Linux_Debug/mini-dm
+		strip ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic
+	fi
+	echo "HEXAGON_SDK_ROOT installation trimmed"
+
+	if [ ! "${HEXAGON_TOOLS_ROOT}" = "" ]; then
+
+		# Trim unused files from HEXAGON Tools
+		rm -rf ${HEXAGON_TOOLS_ROOT}/../Documents
+		rm -rf ${HEXAGON_TOOLS_ROOT}/../Examples
+		rm -rf ${HEXAGON_TOOLS_ROOT}/../Uninstall_Qualcomm\ Hexagon\ LLVM_Tools
+		rm -rf ${HEXAGON_TOOLS_ROOT}/java
+		rm -f  ${HEXAGON_TOOLS_ROOT}/lib/liblldb.so*
+		rm -f  ${HEXAGON_TOOLS_ROOT}/lib/liblldb.so.3.5.0
+		rm -f  ${HEXAGON_TOOLS_ROOT}/lib/libpython2.7.so*
+		rm -rf ${HEXAGON_TOOLS_ROOT}/lib/python2.7
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60v1
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v61
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v61v1
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
+		find ${HEXAGON_TOOLS_ROOT}/bin -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip
+	fi
+
+	echo "HEXAGON_TOOLS_ROOT installation trimmed"
 fi
 
 echo Done

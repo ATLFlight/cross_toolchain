@@ -23,6 +23,16 @@ ARMv7hf cross compiler: ${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2014.11-x86_64_arm-li
 You can re-run installv3.sh as many times as you like and it will only install missing pieces and then display the environment variables to set.
 These can be copied and pasted into the shell for convienience.
 
+### Triming the HEXAGON SDK and HEXAGON Tools installation
+
+If you run
+```
+./installv3.sh -trim
+```
+
+It will remove all non-essential files and directories for building for Snapdragon Flight from the SDK and Tools installation.
+This can be useful if you are for instance wanting to create a minimal install if the SDK and Tools for a CI test image.
+
 ## Sysroot Installation
 
 There are 2 sysroot options. The recommended is QRLinux because it provides access to all the proprietary libraries to access camera, etc on Snapdragon Flight.
