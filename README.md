@@ -1,7 +1,6 @@
 # cross_toolchain
 
-This project will install the Hexagon SDK 3.0, ARMv7hf cross compiler, and an ARMv7hf sysroot
-for Snapdragon Flight application development.
+This project will install the Hexagon SDK 3.0, Hexagon cross compiler, gcc 4.9 ARMv7hf cross compiler, and an ARMv7hf sysroot for Snapdragon Flight application development.
 
 ## SDK Installation
 
