@@ -43,6 +43,8 @@ Additional packages can be added to either sysroot by adding them to the EXTRA_P
 
 ### QRLinux sysroot
 
+**NOTE: The Flight_qrlSDK.tgz file is currently unavailable from Intrinsyc. Please use the Stock Ubuntu Trusty (14.04) sysroot for now**
+
 The QRLinux sysroot contains all the additional libraries to use the camera, etc on Snapdragon Flight that are are only available in the QRLinux image.
 
 Login to the Intrinsyc support page and download: http://support.intrinsyc.com/attachments/download/483/Flight_qrlSDK.zip
