@@ -34,6 +34,14 @@
 
 # Installer script for Ubuntu 14.04 ARMv7hf sysroot
 
+# fakeroot is broken on Ubuntu 12.04
+if [ "`lsb_release -r | grep 12.04`" = "" ]; then
+	CHROOT_PREFIX="fakechroot fakeroot"
+else
+	CHROOT_PREFIX="sudo"
+fi
+
+
 # Fetch Ubuntu 14.04 ARM image for sysroot
 if [ ! -f downloads/linaro-trusty-developer-20140922-682.tar.gz ]; then
 	wget -P downloads http://releases.linaro.org/14.09/ubuntu/trusty-images/developer/linaro-trusty-developer-20140922-682.tar.gz
@@ -123,14 +131,8 @@ fi
 
 # Remove packages not needed in a sysroot
 
-# fakeroot is broken on Ubuntu 12.04
-if [ "`lsb_release -r | grep 12.04`" = "" ]; then
-	fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get purge -y ${REMOVE_PACKAGES_1}
-	fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get autoremove -y
-else
-	sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get purge -y ${REMOVE_PACKAGES_1}
-	sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get autoremove -y
-fi
+${CHROOT_PREFIX} chroot ${HEXAGON_ARM_SYSROOT} apt-get purge -y ${REMOVE_PACKAGES_1}
+${CHROOT_PREFIX} chroot ${HEXAGON_ARM_SYSROOT} apt-get autoremove -y
 
 if [ ! "${EXTRA_PACKAGES}" = "" ]; then
 
@@ -155,37 +157,31 @@ fi
 # Remove packages not needed in a sysroot that make have been installed by EXTRA_PACKAGES
 
 # fakeroot is broken on Ubuntu 12.04
-if [ "`lsb_release -r | grep 12.04`" = "" ]; then
-	fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get purge -y ${REMOVE_PACKAGES_2}
-	fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get autoremove -y
-	fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} rm -rf /var/lib/apt/lists/*_trusty_* /usr/share/man /usr/share/doc /usr/share/info
-else
-	sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get purge -y ${REMOVE_PACKAGES_2}
-	sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get autoremove -y
-	sudo chroot ${HEXAGON_ARM_SYSROOT} rm -rf /usr/share/man /usr/share/doc /usr/share/info \
-		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_Release \
-		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_Release.gpg \
-		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_main_binary-armhf_Packages \
-		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_main_i18n_Translation-en \
-		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_main_source_Sources \
-		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_universe_binary-armhf_Packages \
-		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_universe_i18n_Translation-en \
-		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_universe_source_Sources \
-		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_Release \
-		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_Release.gpg \
-		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_main_binary-armhf_Packages \
-		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_main_debug_binary-armhf_Packages \
-		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_main_i18n_Translation-en \
-		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_main_source_Sources \
-		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_Release \
-		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_Release.gpg \
-		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_main_binary-armhf_Packages \
-		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_main_i18n_Translation-en \
-		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_main_source_Sources \
-		/var/lib/apt/lists/repo.linaro.org_ubuntu_linaro-overlay_dists_trusty_InRelease \
-		/var/lib/apt/lists/repo.linaro.org_ubuntu_linaro-overlay_dists_trusty_main_binary-armhf_Packages \
-		/var/lib/apt/lists/repo.linaro.org_ubuntu_linaro-overlay_dists_trusty_main_source_Sources
-fi
+${CHROOT_PREFIX} chroot ${HEXAGON_ARM_SYSROOT} apt-get purge -y ${REMOVE_PACKAGES_2}
+${CHROOT_PREFIX} chroot ${HEXAGON_ARM_SYSROOT} apt-get autoremove -y
+${CHROOT_PREFIX} chroot ${HEXAGON_ARM_SYSROOT} rm -rf /usr/share/man /usr/share/doc /usr/share/info \
+	/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_Release \
+	/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_Release.gpg \
+	/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_main_binary-armhf_Packages \
+	/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_main_i18n_Translation-en \
+	/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_main_source_Sources \
+	/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_universe_binary-armhf_Packages \
+	/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_universe_i18n_Translation-en \
+	/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_universe_source_Sources \
+	/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_Release \
+	/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_Release.gpg \
+	/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_main_binary-armhf_Packages \
+	/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_main_debug_binary-armhf_Packages \
+	/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_main_i18n_Translation-en \
+	/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_main_source_Sources \
+	/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_Release \
+	/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_Release.gpg \
+	/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_main_binary-armhf_Packages \
+	/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_main_i18n_Translation-en \
+	/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_main_source_Sources \
+	/var/lib/apt/lists/repo.linaro.org_ubuntu_linaro-overlay_dists_trusty_InRelease \
+	/var/lib/apt/lists/repo.linaro.org_ubuntu_linaro-overlay_dists_trusty_main_binary-armhf_Packages \
+	/var/lib/apt/lists/repo.linaro.org_ubuntu_linaro-overlay_dists_trusty_main_source_Sources
 
 echo Done
 echo "--------------------------------------------------------------------"
