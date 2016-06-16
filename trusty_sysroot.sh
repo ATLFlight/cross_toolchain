@@ -42,6 +42,10 @@ fi
 # Extra packages to add to install to armhf sysroot
 EXTRA_PACKAGES="libncurses5-dev"
 
+# Remove some packages to reduce the size of the sysroot
+REMOVE_PACKAGES_1="xen-hypervisor-4.4-armhf xen-tools xen-utils-4.4 xen-utils-common xenstore-utils wpasupplicant powertop logrotate gdb gdbserver tcpd vim ntpdate wireless-tools usbutils ureadahead openssh-client openssh-server rsync lm-sensors alsa-base alsa-utils btrfs-tools oprofile vim-tiny vim-common vim-runtime strace git isc-dhcp-common eject iotop i2c-tools idlestat netcat-openbsd mutrace lsof linux-sound-base powerdebug"
+REMOVE_PACKAGES_2="manpages manpages-dev cpp gcc g++"
+
 # Install package deps
 if [ ! -f /usr/bin/fakechroot ] || [ ! -f /usr/bin/qemu-arm-static ]; then
 	if [ ! "${EXTRA_PACKAGES}" = "" ]; then
@@ -77,9 +81,12 @@ if [ ! -f ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED ]; then
 	tar -C ${HEXAGON_ARM_SYSROOT} --strip-components=1 --exclude="dev/*" -xzf downloads/linaro-trusty-developer-20140922-682.tar.gz && echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/SYSROOT_UNPACKED
 fi
 
-# fakechroot is used to install additional packages without using sudo
+# fakechroot is used to install/remove additional packages without using sudo
 # It requires a little extra magic to make it work with misc-binfmt and qemu
-if [ ! "${EXTRA_PACKAGES}" = "" ]; then
+if [ ! -f ${HEXAGON_ARM_SYSROOT}/UPDATED ]; then
+	rm -f ${HEXAGON_ARM_SYSROOT}/etc/resolv.conf
+	cp /etc/resolv.conf ${HEXAGON_ARM_SYSROOT}/etc/
+	export QEMU_LD_PREFIX=${HEXAGON_ARM_SYSROOT}
 
 	# Linaro Trusty image contains qemu-arm-static so no need to copy over
 
@@ -111,6 +118,22 @@ if [ ! "${EXTRA_PACKAGES}" = "" ]; then
 				--strip-components=5 -xf - ./usr/lib/arm-linux-gnueabihf/fakechroot/libfakechroot.so
 	fi
 
+	fakechroot chroot ${HEXAGON_ARM_SYSROOT} apt-get update && touch ${HEXAGON_ARM_SYSROOT}/UPDATED
+fi
+
+# Remove packages not needed in a sysroot
+
+# fakeroot is broken on Ubuntu 12.04
+if [ "`lsb_release -r | grep 12.04`" = "" ]; then
+	fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get purge -y ${REMOVE_PACKAGES_1}
+	fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get autoremove -y
+else
+	sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get purge -y ${REMOVE_PACKAGES_1}
+	sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get autoremove -y
+fi
+
+if [ ! "${EXTRA_PACKAGES}" = "" ]; then
+
 	# Add extra packages to sysroot
 	if [ ! -f ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED ]; then
 		rm -f ${HEXAGON_ARM_SYSROOT}/etc/resolv.conf
@@ -127,6 +150,41 @@ if [ ! "${EXTRA_PACKAGES}" = "" ]; then
 			sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/SYSROOT_CONFIGURED
 		fi
 	fi
+fi
+
+# Remove packages not needed in a sysroot that make have been installed by EXTRA_PACKAGES
+
+# fakeroot is broken on Ubuntu 12.04
+if [ "`lsb_release -r | grep 12.04`" = "" ]; then
+	fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get purge -y ${REMOVE_PACKAGES_2}
+	fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get autoremove -y
+	fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} rm -rf /var/lib/apt/lists/*_trusty_* /usr/share/man /usr/share/doc /usr/share/info
+else
+	sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get purge -y ${REMOVE_PACKAGES_2}
+	sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get autoremove -y
+	sudo chroot ${HEXAGON_ARM_SYSROOT} rm -rf /usr/share/man /usr/share/doc /usr/share/info \
+		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_Release \
+		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_Release.gpg \
+		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_main_binary-armhf_Packages \
+		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_main_i18n_Translation-en \
+		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_main_source_Sources \
+		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_universe_binary-armhf_Packages \
+		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_universe_i18n_Translation-en \
+		/var/lib/apt/lists/ports.ubuntu.com_ubuntu-ports_dists_trusty_universe_source_Sources \
+		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_Release \
+		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_Release.gpg \
+		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_main_binary-armhf_Packages \
+		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_main_debug_binary-armhf_Packages \
+		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_main_i18n_Translation-en \
+		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_overlay_ubuntu_dists_trusty_main_source_Sources \
+		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_Release \
+		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_Release.gpg \
+		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_main_binary-armhf_Packages \
+		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_main_i18n_Translation-en \
+		/var/lib/apt/lists/ppa.launchpad.net_linaro-maintainers_tools_ubuntu_dists_trusty_main_source_Sources \
+		/var/lib/apt/lists/repo.linaro.org_ubuntu_linaro-overlay_dists_trusty_InRelease \
+		/var/lib/apt/lists/repo.linaro.org_ubuntu_linaro-overlay_dists_trusty_main_binary-armhf_Packages \
+		/var/lib/apt/lists/repo.linaro.org_ubuntu_linaro-overlay_dists_trusty_main_source_Sources
 fi
 
 echo Done

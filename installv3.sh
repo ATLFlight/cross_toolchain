@@ -163,6 +163,8 @@ if [ "${TRIM}" = "1" ]; then
 		rm -rf ${HEXAGON_SDK_ROOT}/libs/camera_streaming
 		find ${HEXAGON_SDK_ROOT} -name "*_toolv74" | xargs rm -rf
 		find ${HEXAGON_SDK_ROOT} -name "*_toolv74_*" | xargs rm -rf
+		find ${HEXAGON_SDK_ROOT} -name "android*" | xargs rm -rf
+		find ${HEXAGON_SDK_ROOT} -name "*_toolv72_v60*" | xargs rm -rf
 		rm -rf ${HEXAGON_SDK_ROOT}/tools/android-ndk-r10d
 		rm -rf ${HEXAGON_SDK_ROOT}/tools/hexagon_ide
 		rm -rf ${HEXAGON_SDK_ROOT}/tools/Installer_logs
