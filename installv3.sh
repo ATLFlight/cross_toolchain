@@ -64,7 +64,7 @@ fi
 
 # We can't use read inside docker.
 if [ ! -f /.dockerenv ]; then
-    read -r -p "${1:-HEXAGON_INSTALL_HOME [${HOME}]} " response
+    read -r -p "HEXAGON_INSTALL_HOME [${HOME}] " response
     if [ ! "$response" = "" ]; then
         HOME=$response
     fi
