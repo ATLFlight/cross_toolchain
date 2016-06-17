@@ -62,9 +62,12 @@ if [ ! "$1" = "" ]; then
 	HOME=$1
 fi
 
-read -r -p "HEXAGON_INSTALL_HOME [${HOME}] " response
-if [ ! "$response" = "" ]; then
-	HOME=$response
+# We can't use read inside docker.
+if [ ! -f /.dockerenv ]; then
+    read -r -p "${1:-HEXAGON_INSTALL_HOME [${HOME}]} " response
+    if [ ! "$response" = "" ]; then
+        HOME=$response
+    fi
 fi
 
 HEXAGON_SDK_ROOT=${HOME}/Qualcomm/Hexagon_SDK/3.0
@@ -153,7 +156,7 @@ fi
 
 # Reduce the size of the installed SDK to only the files needed for build
 if [ "${TRIM}" = "1" ]; then
-	
+
 	if [ ! "${HEXAGON_SDK_ROOT}" = "" ]; then
 
 		# Trim unused files from HEXAGON SDK
