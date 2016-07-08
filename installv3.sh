@@ -90,7 +90,7 @@ if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic ]; then
 		echo "Put the file qualcomm_hexagon_sdk_lnx_3_0_eval.bin in the downloads directory"
 		echo "and re-run this script."
 		echo "If you do not have the file, you can download it from:"
-		echo "    https://developer.qualcomm.com/download/hexagon/hexagon-sdk-v3-linux.bin"
+		echo "    https://developer.qualcomm.com/download/hexagon/qualcomm_hexagon_sdk_lnx_3_0_eval.bin"
 		echo
 	fi
 fi
@@ -123,7 +123,7 @@ if [[ ${HEXAGON_TOOLS_ROOT} = */7.2.12/Tools ]] ; then
 		echo
 		echo "The Hexagon Tools 7.2.12 version was not installed."
 		echo "Re-install the Hexagon SDK and select the Hexagon Tools install option"
-		echo "sh ./downloads/https://developer.qualcomm.com/download/hexagon/hexagon-sdk-v3-linux.bin -i swing"
+		echo "sh ./downloads/https://developer.qualcomm.com/download/hexagon/qualcomm_hexagon_sdk_lnx_3_0_eval.bin -i swing"
 		echo
 		exit 1
 	fi
