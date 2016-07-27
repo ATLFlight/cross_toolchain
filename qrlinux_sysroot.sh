@@ -34,12 +34,15 @@
 
 # Installer script for QRLinux ARMv7hf sysroot
 
-# Verify the qrlSDK.zip was downloaded from Intrinsyc
-if [ ! -f downloads/Flight_qrlSDK.zip ]; then
+QRLSDK=Flight_3.1.1_qrlSDK
+QRLSDKZIP=${QRLSDK}.zip
+
+# Verify the ${QRLSDKZIP} file was downloaded from Intrinsyc
+if [ ! -f downloads/${QRLSDKZIP} ]; then
 	echo
-	echo "Please put the Flight_qrlSDK.zip file from the following link into the downloads"
+	echo "Please put the ${QRLSDKZIP} file from the following link into the downloads"
 	echo "directory and re-run this script:"
-	echo "   http://support.intrinsyc.com/attachments/download/483/Flight_qrlSDK.zip"
+	echo "   http://support.intrinsyc.com/attachments/download/690/${QRLSDKZIP}"
 	exit 1
 fi
 
@@ -66,13 +69,15 @@ if [ "${HEXAGON_ARM_SYSROOT}" = "" ]; then
 		exit 1
 	fi
 
-	HEXAGON_ARM_SYSROOT=${HOME}/Qualcomm/qrlinux_v1.0_sysroot
+	HEXAGON_ARM_SYSROOT=${HOME}/Qualcomm/qrlinux_v3.1.1_sysroot
 fi
 
-if [[ ${HEXAGON_ARM_SYSROOT} = */Qualcomm/qrlinux_v1.0_sysroot ]]; then
+if [[ ${HEXAGON_ARM_SYSROOT} = */Qualcomm/qrlinux_v3.1.1_sysroot ]]; then
 	echo "Installing QRLinux sysroot"
 else
 	echo "Invalid install path for HEXAGON_ARM_SYSROOT"
+	echo "Path must end in .../Qualcomm/qrlinux_v3.1.1_sysroot"
+	echo "Try 'unset HEXAGON_ARM_SYSROOT' then re-run this script"
 	exit 1
 fi
 
@@ -87,23 +92,23 @@ fi
 if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED ]; then
 	mkdir -p ${HEXAGON_ARM_SYSROOT}
 	echo "Unpacking sysroot..."
-	if [ ! -d downloads/Flight_qrlSDK ]; then
+	if [ ! -d downloads/qrlSDK ]; then
 		echo "Extracting qrlSDK zip file"
-		cd downloads && unzip Flight_qrlSDK.zip
+		cd downloads && unzip ${QRLSDKZIP}
 		cd ..
 	fi
-	if [ ! -f downloads/Flight_qrlSDK/qrlSysroots.tgz ]; then
+	if [ ! -f downloads/qrlSDK/qrlSysroots.tgz ]; then
 		echo "QRLinux SDK unpack failed"
 		exit 1
 	fi
 
 	echo "Extracting qrlSDK tar file"
-	if [ ! -d downloads/Flight_qrlSDK/sysroots/eagle8074/linaro-rootfs ]; then
-		tar -C downloads/Flight_qrlSDK --exclude="dev/*" -xzf downloads/Flight_qrlSDK/qrlSysroots.tgz sysroots/eagle8074/linaro-rootfs
+	if [ ! -d downloads/qrlSDK/sysroots/eagle8074/linaro-rootfs ]; then
+		tar -C downloads/qrlSDK --exclude="dev/*" -xzf downloads/qrlSDK/qrlSysroots.tgz sysroots/eagle8074/linaro-rootfs
 	fi
 	mkdir -p ${HEXAGON_ARM_SYSROOT}
 	echo "copying to ${HEXAGON_ARM_SYSROOT}"
-	cp -arp downloads/Flight_qrlSDK/sysroots/eagle8074/linaro-rootfs/* ${HEXAGON_ARM_SYSROOT}
+	cp -arp downloads/qrlSDK/sysroots/eagle8074/linaro-rootfs/* ${HEXAGON_ARM_SYSROOT}
 	echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED
 fi
 
