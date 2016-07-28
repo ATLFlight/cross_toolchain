@@ -104,11 +104,11 @@ if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED ]; then
 
 	echo "Extracting qrlSDK tar file"
 	if [ ! -d downloads/qrlSDK/sysroots/eagle8074/linaro-rootfs ]; then
-		tar -C downloads/qrlSDK --exclude="dev/*" -xzf downloads/qrlSDK/qrlSysroots.tgz sysroots/eagle8074/linaro-rootfs
+		tar -C downloads/qrlSDK -xzf downloads/qrlSDK/qrlSysroots.tgz sysroots/eagle8074
 	fi
 	mkdir -p ${HEXAGON_ARM_SYSROOT}
 	echo "copying to ${HEXAGON_ARM_SYSROOT}"
-	cp -arp downloads/qrlSDK/sysroots/eagle8074/linaro-rootfs/* ${HEXAGON_ARM_SYSROOT}
+	cp -arp downloads/qrlSDK/sysroots/eagle8074/* ${HEXAGON_ARM_SYSROOT}
 	echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED
 fi
 
