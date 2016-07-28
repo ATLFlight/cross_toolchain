@@ -46,18 +46,7 @@ if [ ! -f downloads/${QRLSDKZIP} ]; then
 	exit 1
 fi
 
-# Extra packages to add to install to armhf sysroot
-EXTRA_PACKAGES="libncurses5-dev"
-
-# Install package deps
-if [ ! -f /usr/bin/fakechroot ] || [ ! -f /usr/bin/qemu-arm-static ]; then
-	if [ ! "${EXTRA_PACKAGES}" = "" ]; then
-		echo "Please install fakechroot and qemu-system-arm"
-		echo "sudo apt-get install fakechroot fakeroot qemu-user-static"
-		exit 1
-	fi
-fi
-
+# It is not possible to add extra packages into the qrlSDK
 
 if [ "${HEXAGON_ARM_SYSROOT}" = "" ]; then
 	# If HEXAGON_SDK_ROOT is set, deduce what HOME should be
@@ -109,60 +98,11 @@ if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED ]; then
 	mkdir -p ${HEXAGON_ARM_SYSROOT}
 	echo "copying to ${HEXAGON_ARM_SYSROOT}"
 	cp -arp downloads/qrlSDK/sysroots/eagle8074/* ${HEXAGON_ARM_SYSROOT}
+	mkdir -p ${HEXAGON_ARM_SYSROOT}/var/opt
+	cp /usr/bin/qemu-arm-static ${HEXAGON_ARM_SYSROOT}/usr/bin
 	echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED
 fi
 
-# fakechroot is used to install additional packages without using sudo
-# It requires a little extra magic to make it work with misc-binfmt and qemu
-if [ ! "${EXTRA_PACKAGES}" = "" ]; then
-
-	# Linaro Trusty image contains qemu-arm-static so no need to copy over
-
-	pushd .
-	cd downloads
-	# Get ARM libc to use with qemu-arm-static
-	if [ ! -f libc6_2.19-0ubuntu6_armhf.deb ]; then
-		wget http://launchpadlibrarian.net/172662762/libc6_2.19-0ubuntu6_armhf.deb
-	fi
-
-	# Get armhf libs to enable fakechroot to work under qemu
-	if [ ! -f libfakeroot_1.20-3ubuntu2_armhf.deb ]; then
-		wget http://launchpadlibrarian.net/170520929/libfakeroot_1.20-3ubuntu2_armhf.deb
-	fi
-	if [ ! -f libfakechroot_2.17.1-2_armhf.deb ]; then
-		wget http://launchpadlibrarian.net/159987636/libfakechroot_2.17.1-2_armhf.deb
-	fi
-	popd
-
-	# Install armhf libs in sysroot to enable fakechroot to work under qemu
-	if [ ! -f ${HEXAGON_ARM_SYSROOT}/usr/lib/arm-linux-gnueabihf/libfakeroot-sysv.so ]; then
-		dpkg-deb --fsys-tarfile downloads/libfakeroot_1.20-3ubuntu2_armhf.deb | \
-			tar -C ${HEXAGON_ARM_SYSROOT}/usr/lib/arm-linux-gnueabihf \
-				--strip-components=5 -xf - ./usr/lib/arm-linux-gnueabihf/libfakeroot/libfakeroot-sysv.so
-	fi
-	if [ ! -f ${HEXAGON_ARM_SYSROOT}/usr/lib/arm-linux-gnueabihf/libfakechroot.so ]; then
-		dpkg-deb --fsys-tarfile downloads/libfakechroot_2.17.1-2_armhf.deb | \
-			tar -C ${HEXAGON_ARM_SYSROOT}/usr/lib/arm-linux-gnueabihf \
-				--strip-components=5 -xf - ./usr/lib/arm-linux-gnueabihf/fakechroot/libfakechroot.so
-	fi
-
-	# Add extra packages to sysroot
-	if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_CONFIGURED ]; then
-		rm -f ${HEXAGON_ARM_SYSROOT}/etc/resolv.conf
-		cp /etc/resolv.conf ${HEXAGON_ARM_SYSROOT}/etc/
-		export QEMU_LD_PREFIX=${HEXAGON_ARM_SYSROOT}
-		if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/UPDATED ]; then
-			fakechroot chroot ${HEXAGON_ARM_SYSROOT} apt-get update && touch ${HEXAGON_ARM_SYSROOT}/var/opt/UPDATED
-		fi
-
-		# fakeroot is broken on Ubuntu 12.04
-		if [ "`lsb_release -r | grep 12.04`" = "" ]; then
-			fakechroot fakeroot chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_CONFIGURED
-		else
-			sudo chroot ${HEXAGON_ARM_SYSROOT} apt-get install -y ${EXTRA_PACKAGES} && touch ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_CONFIGURED
-		fi
-	fi
-fi
 
 echo Done
 echo "--------------------------------------------------------------------"
