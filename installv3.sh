@@ -134,16 +134,16 @@ else
 fi
 
 # Fetch ARMv7hf cross compiler
-if [ ! -f downloads/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz ]; then
-	wget -P downloads https://releases.linaro.org/14.11/components/toolchain/binaries/arm-linux-gnueabihf/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz
+if [ ! -f downloads/gcc-linaro-4.9-2016.02-x86_64_arm-linux-gnueabihf.tar.xz ]; then
+	wget -P downloads https://releases.linaro.org/components/toolchain/binaries/4.9-2016.02/arm-linux-gnueabihf/gcc-linaro-4.9-2016.02-x86_64_arm-linux-gnueabihf.tar.xz
 fi
 
 # Unpack armhf cross compiler
-if [ ! -d ${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf_linux ]; then
+if [ ! -d ${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2016.02-x86_64_arm-linux-gnueabihf_linux ]; then
 	echo "Unpacking cross compiler..."
-	tar -C ${HEXAGON_SDK_ROOT} -xJf downloads/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf.tar.xz
+	tar -C ${HEXAGON_SDK_ROOT} -xJf downloads/gcc-linaro-4.9-2016.02-x86_64_arm-linux-gnueabihf.tar.xz
 	# The SDK added a _linux extension
-	mv ${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf ${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf_linux
+	mv ${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2016.02-x86_64_arm-linux-gnueabihf ${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2016.02-x86_64_arm-linux-gnueabihf_linux
 fi
 
 if [ ! -f ${HEXAGON_SDK_ROOT}/libs/common/rpcmem/UbuntuARM_Debug/rpcmem.a ]; then
@@ -206,10 +206,10 @@ fi
 
 echo Done
 echo "--------------------------------------------------------------------"
-echo "armhf cross compiler is at: ${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf_linux"
+echo "armhf cross compiler is at: ${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2016.02-x86_64_arm-linux-gnueabihf_linux"
 echo
 echo "Make sure to set the following environment variables:"
 echo "   export HEXAGON_SDK_ROOT=${HEXAGON_SDK_ROOT}"
 echo "   export HEXAGON_TOOLS_ROOT=${HEXAGON_TOOLS_ROOT}"
-echo "   export PATH=\${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf_linux/bin:\$PATH"
+echo "   export PATH=\${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2016.02-x86_64_arm-linux-gnueabihf_linux/bin:\$PATH"
 echo
