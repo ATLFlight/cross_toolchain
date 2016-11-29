@@ -192,6 +192,13 @@ if [ "${TRIM}" = "1" ]; then
 		rm -rf ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu10
 		rm -rf ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu12
 		rm -rf ${HEXAGON_SDK_ROOT}/tools/utils
+		rm -rf ${HEXAGON_SDK_ROOT}/tools/elfsigner
+		rm -rf ${HEXAGON_SDK_ROOT}/scripts
+		rm -rf ${HEXAGON_SDK_ROOT}/test
+		rm -rf ${HEXAGON_SDK_ROOT}/libs/fastcv
+		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/power_ctl
+		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/FFTsfc
+		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/FFTsfr
 
 		strip ${HEXAGON_SDK_ROOT}/tools/debug/mini-dm/Linux_Debug/mini-dm
 		strip ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic
