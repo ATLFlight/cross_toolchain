@@ -199,6 +199,8 @@ if [ "${TRIM}" = "1" ]; then
 		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/power_ctl
 		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/FFTsfc
 		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/FFTsfr
+		rm -rf ${HEXAGON_SDK_ROOT}/setup_sdk_env.sh
+		rm -rf ${HEXAGON_SDK_ROOT}/readme.txt
 
 		strip ${HEXAGON_SDK_ROOT}/tools/debug/mini-dm/Linux_Debug/mini-dm
 		strip ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic
