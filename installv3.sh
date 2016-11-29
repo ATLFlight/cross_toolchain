@@ -148,11 +148,18 @@ if [ ! -d ${HEXAGON_SDK_ROOT}/${GCC_2016} ]; then
 fi
 
 # Update the ARM cross compiler
-grep ${GCC_2014} ${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Debug.min && \
-    sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Debug.min
+DEBUG_MINFILE=${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Debug.min
+RELEASE_MINFILE=${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Release.min
 
-grep ${GCC_2014} ${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Release.min && \
-    sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Release.min
+if [ -f ${DEBUG_MINFILE} ]; then 
+    echo "Updating GCC version for Debug build"
+    grep -q ${GCC_2014} ${DEBUG_MINFILE} && sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${DEBUG_MINFILE}
+fi
+
+if [ -f ${RELEASE_MINFILE} ]; then 
+    echo "Updating GCC version for Release build"
+    grep -q ${GCC_2014} ${RELEASE_MINFILE} && sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${RELEASE_MINFILE}
+fi
 
 if [ ! -f ${HEXAGON_SDK_ROOT}/libs/common/rpcmem/UbuntuARM_Debug/rpcmem.a ]; then
 	echo "Building rpcmem.a ..."
@@ -176,7 +183,7 @@ if [ "${TRIM}" = "1" ]; then
 		find ${HEXAGON_SDK_ROOT} -name "*_toolv74" | xargs rm -rf
 		find ${HEXAGON_SDK_ROOT} -name "*_toolv74_*" | xargs rm -rf
 		find ${HEXAGON_SDK_ROOT} -name "android*" | xargs rm -rf
-		#find ${HEXAGON_SDK_ROOT} -name "*_toolv72_v60*" | xargs rm -rf
+		find ${HEXAGON_SDK_ROOT} -name "*_toolv72_v60*" | xargs rm -rf
 		rm -rf ${HEXAGON_SDK_ROOT}/tools/android-ndk-r10d
 		rm -rf ${HEXAGON_SDK_ROOT}/tools/hexagon_ide
 		rm -rf ${HEXAGON_SDK_ROOT}/tools/Installer_logs
@@ -202,11 +209,11 @@ if [ "${TRIM}" = "1" ]; then
 		rm -f  ${HEXAGON_TOOLS_ROOT}/lib/liblldb.so.3.5.0
 		rm -f  ${HEXAGON_TOOLS_ROOT}/lib/libpython2.7.so*
 		rm -rf ${HEXAGON_TOOLS_ROOT}/lib/python2.7
-		#rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
-		#rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60v1
-		#rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v61
-		#rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v61v1
-		#rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60v1
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v61
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v61v1
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
 		find ${HEXAGON_TOOLS_ROOT}/bin -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip
 	fi
 
