@@ -173,6 +173,7 @@ fi
 # Reduce the size of the installed SDK to only the files needed for build
 if [ "${TRIM}" = "1" ]; then
 
+	echo "Trimming HEXAGON_SDK_ROOT ..."
 	if [ ! "${HEXAGON_SDK_ROOT}" = "" ]; then
 
 		# Trim unused files from HEXAGON SDK
@@ -204,9 +205,12 @@ if [ "${TRIM}" = "1" ]; then
 
 		strip ${HEXAGON_SDK_ROOT}/tools/debug/mini-dm/Linux_Debug/mini-dm
 		strip ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic
-	fi
-	echo "HEXAGON_SDK_ROOT installation trimmed"
 
+		find ${HEXAGON_SDK_ROOT}/${GCC_2016} -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip --strip-unneeded
+		find ${HEXAGON_SDK_ROOT}/${GCC_2016} -name "*.a" | xargs strip --strip-unneeded
+	fi
+
+	echo "Trimming HEXAGON_TOOLS_ROOT ..."
 	if [ ! "${HEXAGON_TOOLS_ROOT}" = "" ]; then
 
 		# Trim unused files from HEXAGON Tools
@@ -218,15 +222,18 @@ if [ "${TRIM}" = "1" ]; then
 		rm -f  ${HEXAGON_TOOLS_ROOT}/lib/liblldb.so.3.5.0
 		rm -f  ${HEXAGON_TOOLS_ROOT}/lib/libpython2.7.so*
 		rm -rf ${HEXAGON_TOOLS_ROOT}/lib/python2.7
-		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
 		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60v1
 		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v61
 		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v61v1
-		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
-		find ${HEXAGON_TOOLS_ROOT}/bin -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip
-	fi
 
-	echo "HEXAGON_TOOLS_ROOT installation trimmed"
+		# DO NOT REMOVE v60 (it is the default)
+		#rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
+
+		# Strip the binaries and libs
+		find ${HEXAGON_TOOLS_ROOT}/bin -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip --strip-unneeded
+		find ${HEXAGON_TOOLS_ROOT}/lib -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip --strip-unneeded
+		find ${HEXAGON_TOOLS_ROOT}/target -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs ${HEXAGON_TOOLS_ROOT}/bin/hexagon-strip --strip-unneeded
+	fi
 fi
 
 echo Done
