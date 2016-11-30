@@ -243,5 +243,4 @@ echo
 echo "Make sure to set the following environment variables:"
 echo "   export HEXAGON_SDK_ROOT=${HEXAGON_SDK_ROOT}"
 echo "   export HEXAGON_TOOLS_ROOT=${HEXAGON_TOOLS_ROOT}"
-echo "   export PATH=\${HEXAGON_SDK_ROOT}/${GCC_2016}/bin:\$PATH"
 echo
