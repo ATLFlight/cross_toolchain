@@ -151,12 +151,12 @@ fi
 DEBUG_MINFILE=${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Debug.min
 RELEASE_MINFILE=${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Release.min
 
-if [ -f ${DEBUG_MINFILE} ]; then 
+if [ -f ${DEBUG_MINFILE} ]; then
     echo "Updating GCC version for Debug build"
     grep -q ${GCC_2014} ${DEBUG_MINFILE} && sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${DEBUG_MINFILE}
 fi
 
-if [ -f ${RELEASE_MINFILE} ]; then 
+if [ -f ${RELEASE_MINFILE} ]; then
     echo "Updating GCC version for Release build"
     grep -q ${GCC_2014} ${RELEASE_MINFILE} && sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${RELEASE_MINFILE}
 fi
