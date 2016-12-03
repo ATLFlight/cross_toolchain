@@ -205,9 +205,6 @@ if [ "${TRIM}" = "1" ]; then
 
 		strip ${HEXAGON_SDK_ROOT}/tools/debug/mini-dm/Linux_Debug/mini-dm
 		strip ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic
-
-		find ${HEXAGON_SDK_ROOT}/${GCC_2016} -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip --strip-unneeded
-		find ${HEXAGON_SDK_ROOT}/${GCC_2016} -name "*.a" | xargs strip --strip-unneeded
 	fi
 
 	echo "Trimming HEXAGON_TOOLS_ROOT ..."
@@ -228,11 +225,6 @@ if [ "${TRIM}" = "1" ]; then
 
 		# DO NOT REMOVE v60 (it is the default)
 		#rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
-
-		# Strip the binaries and libs
-		find ${HEXAGON_TOOLS_ROOT}/bin -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip --strip-unneeded
-		find ${HEXAGON_TOOLS_ROOT}/lib -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip --strip-unneeded
-		find ${HEXAGON_TOOLS_ROOT}/target -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs ${HEXAGON_TOOLS_ROOT}/bin/hexagon-strip --strip-unneeded
 	fi
 fi
 
