@@ -133,33 +133,39 @@ else
 	echo "***************************************************************************"
 fi
 
-GCC_2014=gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf_linux
+GCC_2014=gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf
+GCC_2014_URL=https://releases.linaro.org/archive/14.11/components/toolchain/binaries/arm-linux-gnueabihf
 GCC_2016=gcc-linaro-4.9-2016.02-x86_64_arm-linux-gnueabihf
+GCC_2016_URL=https://releases.linaro.org/components/toolchain/binaries/4.9-2016.02/arm-linux-gnueabihf
 
 # Fetch ARMv7hf cross compiler
-if [ ! -f downloads/${GCC_2016}.tar.xz ]; then
-	wget -P downloads https://releases.linaro.org/components/toolchain/binaries/4.9-2016.02/arm-linux-gnueabihf/${GCC_2016}.tar.xz
+if [ ! -f downloads/${GCC_2014}.tar.xz ]; then
+	wget -P downloads ${GCC_2014_URL}/${GCC_2014}.tar.xz 
 fi
 
 # Unpack armhf cross compiler
-if [ ! -d ${HEXAGON_SDK_ROOT}/${GCC_2016} ]; then
+if [ ! -d ${HEXAGON_SDK_ROOT}/${GCC_2014} ]; then
 	echo "Unpacking cross compiler..."
-	tar -C ${HEXAGON_SDK_ROOT} -xJf downloads/${GCC_2016}.tar.xz
+	tar -C ${HEXAGON_SDK_ROOT} -xJf downloads/${GCC_2014}.tar.xz
+        mv ${HEXAGON_SDK_ROOT}/${GCC_2014} ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux
 fi
 
+# Until the Snapdragon Flight board supports the 2016 toolchain, updates are currently disabled.
+# ----------------------------------------------------------------------------
 # Update the ARM cross compiler
-DEBUG_MINFILE=${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Debug.min
-RELEASE_MINFILE=${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Release.min
+#DEBUG_MINFILE=${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Debug.min
+#RELEASE_MINFILE=${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Release.min
 
-if [ -f ${DEBUG_MINFILE} ]; then 
-    echo "Updating GCC version for Debug build"
-    grep -q ${GCC_2014} ${DEBUG_MINFILE} && sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${DEBUG_MINFILE}
-fi
+#if [ -f ${DEBUG_MINFILE} ]; then 
+#    echo "Updating GCC version for Debug build"
+#    grep -q ${GCC_2014} ${DEBUG_MINFILE} && sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${DEBUG_MINFILE}
+#fi
 
-if [ -f ${RELEASE_MINFILE} ]; then 
-    echo "Updating GCC version for Release build"
-    grep -q ${GCC_2014} ${RELEASE_MINFILE} && sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${RELEASE_MINFILE}
-fi
+#if [ -f ${RELEASE_MINFILE} ]; then 
+#    echo "Updating GCC version for Release build"
+#    grep -q ${GCC_2014} ${RELEASE_MINFILE} && sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${RELEASE_MINFILE}
+#fi
+# ----------------------------------------------------------------------------
 
 if [ ! -f ${HEXAGON_SDK_ROOT}/libs/common/rpcmem/UbuntuARM_Debug/rpcmem.a ]; then
 	echo "Building rpcmem.a ..."
@@ -206,8 +212,8 @@ if [ "${TRIM}" = "1" ]; then
 		strip ${HEXAGON_SDK_ROOT}/tools/debug/mini-dm/Linux_Debug/mini-dm
 		strip ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic
 
-		find ${HEXAGON_SDK_ROOT}/${GCC_2016} -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip --strip-unneeded
-		find ${HEXAGON_SDK_ROOT}/${GCC_2016} -name "*.a" | xargs strip --strip-unneeded
+		find ${HEXAGON_SDK_ROOT}/${GCC_2014} -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip --strip-unneeded
+		find ${HEXAGON_SDK_ROOT}/${GCC_2014} -name "*.a" | xargs strip --strip-unneeded
 	fi
 
 	echo "Trimming HEXAGON_TOOLS_ROOT ..."
@@ -238,7 +244,7 @@ fi
 
 echo Done
 echo "--------------------------------------------------------------------"
-echo "armhf cross compiler is at: ${HEXAGON_SDK_ROOT}/${GCC_2016}"
+echo "armhf cross compiler is at: ${HEXAGON_SDK_ROOT}/${GCC_2014}"
 echo
 echo "Make sure to set the following environment variables:"
 echo "   export HEXAGON_SDK_ROOT=${HEXAGON_SDK_ROOT}"
