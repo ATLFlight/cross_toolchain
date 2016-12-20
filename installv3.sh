@@ -79,7 +79,7 @@ echo HEXAGON_TOOLS_ROOT=${HEXAGON_TOOLS_ROOT}
 
 if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic ]; then
 
-	echo "Hexagon SDK not installed ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic"
+	echo "Hexagon SDK not previously installed"
 	if [ -f downloads/qualcomm_hexagon_sdk_lnx_3_0_eval.bin ]; then
 		echo
 		echo "Installing HEXAGON_SDK to ${HEXAGON_SDK_ROOT}"

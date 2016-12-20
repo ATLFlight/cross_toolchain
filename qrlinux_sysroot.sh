@@ -37,6 +37,12 @@
 QRLSDK=qrlSDK
 QRLSDKTGZ=${QRLSDK}.tgz
 
+if [ ! -f /usr/bin/qemu-arm-static ]; then
+	echo
+	echo "Please install qemu-user-static (for /usr/bin/qemu-arm-static) and re-run this script"
+	exit 1
+fi
+
 # Verify the ${QRLSDKTGZ} file was downloaded from Intrinsyc
 if [ ! -f downloads/${QRLSDKTGZ} ]; then
 	echo
@@ -58,14 +64,14 @@ if [ "${HEXAGON_ARM_SYSROOT}" = "" ]; then
 		exit 1
 	fi
 
-	HEXAGON_ARM_SYSROOT=${HOME}/Qualcomm/qrlinux_v3.1.1_sysroot
+	HEXAGON_ARM_SYSROOT=${HOME}/Qualcomm/qrlinux_v4_sysroot
 fi
 
-if [[ ${HEXAGON_ARM_SYSROOT} = */Qualcomm/qrlinux_v3.1.1_sysroot ]]; then
+if [[ ${HEXAGON_ARM_SYSROOT} = */Qualcomm/qrlinux_v4_sysroot ]]; then
 	echo "Installing QRLinux sysroot"
 else
 	echo "Invalid install path for HEXAGON_ARM_SYSROOT"
-	echo "Path must end in .../Qualcomm/qrlinux_v3.1.1_sysroot"
+	echo "Path must end in .../Qualcomm/qrlinux_v4_sysroot"
 	echo "Try 'unset HEXAGON_ARM_SYSROOT' then re-run this script"
 	exit 1
 fi
