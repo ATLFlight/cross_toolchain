@@ -34,15 +34,15 @@
 
 # Installer script for QRLinux ARMv7hf sysroot
 
-QRLSDK=Flight_3.1.1_qrlSDK
-QRLSDKZIP=${QRLSDK}.zip
+QRLSDK=qrlSDK
+QRLSDKTGZ=${QRLSDK}.tgz
 
-# Verify the ${QRLSDKZIP} file was downloaded from Intrinsyc
-if [ ! -f downloads/${QRLSDKZIP} ]; then
+# Verify the ${QRLSDKTGZ} file was downloaded from Intrinsyc
+if [ ! -f downloads/${QRLSDKTGZ} ]; then
 	echo
-	echo "Please put the ${QRLSDKZIP} file from the following link into the downloads"
+	echo "Please put the ${QRLSDKTGZ} file from the following link into the downloads"
 	echo "directory and re-run this script:"
-	echo "   http://support.intrinsyc.com/attachments/download/690/${QRLSDKZIP}"
+	echo "   http://support.intrinsyc.com/attachments/download/690/${QRLSDKTGZ}"
 	exit 1
 fi
 
@@ -82,8 +82,8 @@ if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED ]; then
 	mkdir -p ${HEXAGON_ARM_SYSROOT}
 	echo "Unpacking sysroot..."
 	if [ ! -d downloads/qrlSDK ]; then
-		echo "Extracting qrlSDK zip file"
-		cd downloads && unzip ${QRLSDKZIP}
+		echo "Extracting qrlSDK tar file"
+		cd downloads && tar xzf ${QRLSDKTGZ}
 		cd ..
 	fi
 	if [ ! -f downloads/qrlSDK/qrlSysroots.tgz ]; then
