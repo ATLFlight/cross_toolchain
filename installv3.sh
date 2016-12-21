@@ -140,14 +140,14 @@ GCC_2016_URL=https://releases.linaro.org/components/toolchain/binaries/4.9-2016.
 
 # Fetch ARMv7hf cross compiler
 if [ ! -f downloads/${GCC_2014}.tar.xz ]; then
-	wget -P downloads ${GCC_2014_URL}/${GCC_2014}.tar.xz 
+	wget -P downloads ${GCC_2014_URL}/${GCC_2014}.tar.xz
 fi
 
 # Unpack armhf cross compiler
-if [ ! -d ${HEXAGON_SDK_ROOT}/${GCC_2014} ]; then
+if [ ! -d ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux ]; then
 	echo "Unpacking cross compiler..."
 	tar -C ${HEXAGON_SDK_ROOT} -xJf downloads/${GCC_2014}.tar.xz
-        mv ${HEXAGON_SDK_ROOT}/${GCC_2014} ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux
+	mv ${HEXAGON_SDK_ROOT}/${GCC_2014} ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux
 fi
 
 # Until the Snapdragon Flight board supports the 2016 toolchain, updates are currently disabled.
@@ -156,12 +156,12 @@ fi
 #DEBUG_MINFILE=${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Debug.min
 #RELEASE_MINFILE=${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Release.min
 
-#if [ -f ${DEBUG_MINFILE} ]; then 
+#if [ -f ${DEBUG_MINFILE} ]; then
 #    echo "Updating GCC version for Debug build"
 #    grep -q ${GCC_2014} ${DEBUG_MINFILE} && sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${DEBUG_MINFILE}
 #fi
 
-#if [ -f ${RELEASE_MINFILE} ]; then 
+#if [ -f ${RELEASE_MINFILE} ]; then
 #    echo "Updating GCC version for Release build"
 #    grep -q ${GCC_2014} ${RELEASE_MINFILE} && sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${RELEASE_MINFILE}
 #fi
@@ -175,6 +175,33 @@ if [ ! -f ${HEXAGON_SDK_ROOT}/libs/common/rpcmem/UbuntuARM_Debug/rpcmem.a ]; the
 	make V=UbuntuARM_Release
 	popd
 fi
+
+elf_strip () {
+	find $1 -type f -executable -print > tmp_elf_strip_list
+	for f in `cat tmp_elf_strip_list`; do
+		info=`file --brief $f`
+		if [ "`echo "$info" | head -c 3`" == "ELF" ]; then
+			echo "$info" | grep DSP6 && ${HEXAGON_TOOLS_ROOT}/bin/hexagon-strip --strip-unneeded $f
+			echo "$info" | grep ARM && ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux/bin/arm-linux-gnueabihf-strip --strip-unneeded $f
+			echo "$info" | grep x86-64 && strip --strip-unneeded $f
+		fi
+	done
+	rm -f tmp_elf_strip_list
+}
+
+archive_strip () {
+	find $1 -name "*.a" -print > tmp_archive_strip_list
+	for f in `cat tmp_archive_strip_list`; do
+		info=`readelf -h $f | grep Machine | uniq`
+
+		# hexagon-strip doesn't handle archives
+		#echo "$info" | grep DSP6 && ${HEXAGON_TOOLS_ROOT}/bin/hexagon-strip --strip-unneeded $f
+		
+		echo "$info" | grep ARM && ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux/bin/arm-linux-gnueabihf-strip --strip-unneeded $f
+		echo "$info" | grep X86-64 && strip --strip-unneeded $f
+	done
+	rm -f tmp_archive_strip_list
+}
 
 # Reduce the size of the installed SDK to only the files needed for build
 if [ "${TRIM}" = "1" ]; then
@@ -208,12 +235,16 @@ if [ "${TRIM}" = "1" ]; then
 		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/FFTsfr
 		rm -rf ${HEXAGON_SDK_ROOT}/setup_sdk_env.sh
 		rm -rf ${HEXAGON_SDK_ROOT}/readme.txt
+		rm -rf ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux/share/info
+		rm -rf ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux/share/man
+		rm -rf ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux/share/doc
 
-		strip ${HEXAGON_SDK_ROOT}/tools/debug/mini-dm/Linux_Debug/mini-dm
-		strip ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic
+		#strip ${HEXAGON_SDK_ROOT}/tools/debug/mini-dm/Linux_Debug/mini-dm
+		#strip ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic
 
-		find ${HEXAGON_SDK_ROOT}/${GCC_2014} -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip --strip-unneeded
-		find ${HEXAGON_SDK_ROOT}/${GCC_2014} -name "*.a" | xargs strip --strip-unneeded
+		# Strip the binaries, libs and archives
+		elf_strip ${HEXAGON_SDK_ROOT}
+		archive_strip ${HEXAGON_SDK_ROOT}
 	fi
 
 	echo "Trimming HEXAGON_TOOLS_ROOT ..."
@@ -235,16 +266,15 @@ if [ "${TRIM}" = "1" ]; then
 		# DO NOT REMOVE v60 (it is the default)
 		#rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
 
-		# Strip the binaries and libs
-		find ${HEXAGON_TOOLS_ROOT}/bin -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip --strip-unneeded
-		find ${HEXAGON_TOOLS_ROOT}/lib -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs strip --strip-unneeded
-		find ${HEXAGON_TOOLS_ROOT}/target -type f -executable -exec sh -c 'test "$(file --brief "$1" | head -c 3)" = "ELF"' sh {} \; -print | xargs ${HEXAGON_TOOLS_ROOT}/bin/hexagon-strip --strip-unneeded
+		# Strip the binaries, libs and archives
+		elf_strip ${HEXAGON_TOOLS_ROOT}
+		archive_strip ${HEXAGON_TOOLS_ROOT}
 	fi
 fi
 
 echo Done
 echo "--------------------------------------------------------------------"
-echo "armhf cross compiler is at: ${HEXAGON_SDK_ROOT}/${GCC_2014}"
+echo "armhf cross compiler is at: ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux"
 echo
 echo "Make sure to set the following environment variables:"
 echo "   export HEXAGON_SDK_ROOT=${HEXAGON_SDK_ROOT}"
