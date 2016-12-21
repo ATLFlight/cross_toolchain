@@ -46,9 +46,11 @@ fi
 # Verify the ${QRLSDKTGZ} file was downloaded from Intrinsyc
 if [ ! -f downloads/${QRLSDKTGZ} ]; then
 	echo
+	pwd
+	ls
 	echo "Please put the ${QRLSDKTGZ} file from the following link into the downloads"
 	echo "directory and re-run this script:"
-	echo "   http://support.intrinsyc.com/attachments/download/690/${QRLSDKTGZ}"
+	echo "   http://support.intrinsyc.com/attachments/download/1011/${QRLSDKTGZ}"
 	exit 1
 fi
 
@@ -89,8 +91,10 @@ if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED ]; then
 	echo "Unpacking sysroot..."
 	if [ ! -d downloads/qrlSDK ]; then
 		echo "Extracting qrlSDK tar file"
-		cd downloads && tar xzf ${QRLSDKTGZ}
-		cd ..
+		mkdir -p downloads/qrlSDK
+		pushd downloads/qrlSDK
+		tar xzf ../${QRLSDKTGZ}
+		popd
 	fi
 	if [ ! -f downloads/qrlSDK/qrlSysroots.tgz ]; then
 		echo "QRLinux SDK unpack failed"
