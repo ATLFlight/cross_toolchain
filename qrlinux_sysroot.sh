@@ -101,7 +101,7 @@ if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED ]; then
 		exit 1
 	fi
 
-	echo "Extracting qrlSDK tar file"
+	echo "Extracting sysroot from qrlSDK"
 	if [ ! -d downloads/qrlSDK/sysroots/eagle8074/linaro-rootfs ]; then
 		tar -C downloads/qrlSDK -xzf downloads/qrlSDK/qrlSysroots.tgz sysroots/eagle8074
 	fi
