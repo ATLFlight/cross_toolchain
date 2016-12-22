@@ -1,7 +1,10 @@
 #!/bin/bash
 
-rm -rf tmpSDK
-mkdir tmpSDK
+if [ "$1" = "-clean" ]; then
+	rm -rf tmpSDK
+fi
+
+mkdir -p tmpSDK
 
 # Unpack and trim the Hexagon SDK
 ./installv3.sh -no-verify -trim `pwd`/tmpSDK
