@@ -37,10 +37,10 @@
 QRLSDK=qrlSDK
 QRLSDKTGZ=${QRLSDK}.tgz
 
-if [ ! -f /usr/bin/qemu-arm-static ]; then
-	echo
-	echo "Please install qemu-user-static (for /usr/bin/qemu-arm-static) and re-run this script"
-	exit 1
+TRIM=0
+if [ "$1" = "-trim" ]; then
+	TRIM=1
+	shift
 fi
 
 # Verify the ${QRLSDKTGZ} file was downloaded from Intrinsyc
@@ -109,14 +109,128 @@ if [ ! -f ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED ]; then
 	echo "copying to ${HEXAGON_ARM_SYSROOT}"
 	cp -arp downloads/qrlSDK/sysroots/eagle8074/* ${HEXAGON_ARM_SYSROOT}
 	mkdir -p ${HEXAGON_ARM_SYSROOT}/var/opt
-	cp /usr/bin/qemu-arm-static ${HEXAGON_ARM_SYSROOT}/usr/bin
 	echo "${HEXAGON_ARM_SYSROOT}" > ${HEXAGON_ARM_SYSROOT}/var/opt/SYSROOT_UNPACKED
+fi
+
+# Reduce the size of the installed sysroot to only the files needed for build
+# Note: THIS IS STILL EXPERIMENTAL
+if [ "${TRIM}" = "1" ]; then
+	# Remove runtime files that are not required for building applications
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/sounds
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/consolefonts
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/file
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/oprofile
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/zoneinfo
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/perl5
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/mime
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/X11
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/terminfo
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/i18n
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/locale
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/man
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/doc
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/perl
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/vim
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/bin/
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/sbin/
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/udev
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/lib/gcc
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/var
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/bin
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/sbin
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/dev
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/home
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/md5sum.txt
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/etc
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/boot
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/media
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/opt
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/mnt
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/root
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/run
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/sys
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/srv
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/tmp
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/local
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/games
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/src
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/modules
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/firmware
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/systemd
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/terminfo
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/arm-linux-gnueabihf/security
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/arm-linux-gnueabihf/plymouth
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lost+found
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/etc
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/bin
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/sbin
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/bin
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/sbin
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/src
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/share
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/lib/modules
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/lib/firmware
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/pkgdata
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/sysroot-providers
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/filesystem_config.txt
+
+	# The Ubuntu libc is used for SDK based development
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/include/eglibc-locale-internal-cortexa8hf-vfp-neon-linux-gnueabi
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/lib
+
+	# Use the Ubuntu versions of perl, python2.7 and ssl
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/python2.7
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libpython2.7.so*
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libperl.so*
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/perl
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libssl.*
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/pkgconfig/libssl.pc
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl/engines/lib4758cca.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl/engines/libaep.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl/engines/libatalla.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl/engines/libcapi.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl/engines/libchil.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl/engines/libgmp.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl/engines/libgost.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl/engines/libcswift.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl/engines/libsureware.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl/engines/libubsec.so
+
+	# Remove other duplicate libs
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libc.a
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libc_pic.a
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libm.a
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libm_pic.a
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libpthread*
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libsqlite3*
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libanl.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libBrokenLocale.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libcidn.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libcrypt.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libc.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libdb-5.3.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libdl.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libm.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnsl.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_compat.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_dns.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_files.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_hesiod.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_nisplus.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_nis.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl/engines/libnuron.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl/engines/libpadlock.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libresolv.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/librt.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libthread_db.so
+	rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libutil.so
 fi
 
 
 echo Done
 echo "--------------------------------------------------------------------"
-echo "armv7hf sysroot is at:        ${HEXAGON_ARM_SYSROOT}"
+echo "armv7hf sysroot is at:	${HEXAGON_ARM_SYSROOT}"
 echo
 echo "Make sure to set the following environment variables:"
 echo "   export HEXAGON_ARM_SYSROOT=${HEXAGON_ARM_SYSROOT}"
