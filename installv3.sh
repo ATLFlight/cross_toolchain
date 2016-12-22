@@ -37,6 +37,18 @@
 # This must be run from the local dir
 cd `dirname $0`
 
+if [ "$1" = "-h" ]; then
+	echo "Usage: $0 -no-verify -trim [INSTALL_DIR]"
+	exit 1
+fi
+
+VERIFY=1
+if [ "$1" = "-no-verify" ]; then
+	VERIFY=0
+	echo "No verify"
+	shift
+fi
+
 TRIM=0
 if [ "$1" = "-trim" ]; then
 	TRIM=1
@@ -63,7 +75,7 @@ if [ ! "$1" = "" ]; then
 fi
 
 # We can't use read inside docker.
-if [ ! -f /.dockerenv ]; then
+if [ ! -f /.dockerenv ] && [ ${VERIFY} = 1 ]; then
     read -r -p "HEXAGON_INSTALL_HOME [${HOME}] " response
     if [ ! "$response" = "" ]; then
         HOME=$response
