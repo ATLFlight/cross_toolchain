@@ -115,6 +115,8 @@ fi
 # Reduce the size of the installed sysroot to only the files needed for build
 # Note: THIS IS STILL EXPERIMENTAL
 if [ "${TRIM}" = "1" ]; then
+	echo "Trimming sysroot..."
+
 	# Remove runtime files that are not required for building applications
 	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/sounds
 	rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/consolefonts
