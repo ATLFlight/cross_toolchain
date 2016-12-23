@@ -72,7 +72,7 @@ else
 	exit 1
 fi
 
-if [ "$1" = "--clean" ]; then
+if [ "$1" = "--clean" ] || [ -d ${HEXAGON_ARM_SYSROOT}/merged-rootfs ]; then
 	if [ -d ${HEXAGON_ARM_SYSROOT} ]; then
 		echo "Removing previous QRLinux sysroot installation"
 		rm -rf ${HEXAGON_ARM_SYSROOT}
@@ -231,11 +231,12 @@ rsync --recursive -l --ignore-existing -v ${HEXAGON_ARM_SYSROOT}/usr/include ${H
 
 rm -rf ${HEXAGON_ARM_SYSROOT}/usr
 rm -rf ${HEXAGON_ARM_SYSROOT}/var
+mv ${HEXAGON_ARM_SYSROOT}/linaro-rootfs ${HEXAGON_ARM_SYSROOT}/merged-rootfs
 
 echo Done
 echo "--------------------------------------------------------------------"
-echo "armv7hf sysroot is at:	${HEXAGON_ARM_SYSROOT}/linaro-rootfs"
+echo "armv7hf sysroot is at:	${HEXAGON_ARM_SYSROOT}/merged-rootfs"
 echo
 echo "Make sure to set the following environment variables:"
-echo "   export HEXAGON_ARM_SYSROOT=${HEXAGON_ARM_SYSROOT}/linaro-rootfs"
+echo "   export HEXAGON_ARM_SYSROOT=${HEXAGON_ARM_SYSROOT}/merged-rootfs"
 echo
