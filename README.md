@@ -17,7 +17,7 @@ Hexagon SDK [HEXAGON_SDK_ROOT]: ${HOME}/Qualcomm/Hexagon_SDK/3.0
 
 Hexagon Tools [HEXAGON_TOOLS_ROOT]: ${HOME}/Qualcomm/HEXAGON_Tools/7.2.12/Tools
 
-ARMv7hf cross compiler: ${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2016.02-x86_64_arm-linux-gnueabihf_linux
+ARMv7hf cross compiler: ${HEXAGON_SDK_ROOT}/gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf_linux
 
 You can re-run installv3.sh as many times as you like and it will only install missing pieces and then display the environment variables to set.
 These can be copied and pasted into the shell for convienience.
@@ -42,21 +42,19 @@ Additional packages can be added to either sysroot by adding them to the EXTRA_P
 
 ### QRLinux sysroot
 
-**NOTE: The Flight_qrlSDK.zip file is currently unavailable from Intrinsyc. Please use the Stock Ubuntu Trusty (14.04) sysroot for now**
-
 The QRLinux sysroot contains all the additional libraries to use the camera, etc on Snapdragon Flight that are are only available in the QRLinux image.
 
-Login to the Intrinsyc support page and download: http://support.intrinsyc.com/attachments/download/483/Flight_qrlSDK.zip
+Login to the Intrinsyc support page and download: http://support.intrinsyc.com/attachments/download/1011/qrlSDK.tgz
 
 copy/move the file to the ./download directory
 ```
-cp ~/Downloads/Flight_qrlSDK.zip ./downloads
+cp ~/Downloads/qrlSDK.zip ./downloads
 ./qrlinux_sysroot.sh --clean
 ```
 
 This will install:
 
-ARMv7hf QRLinux sysroot [HEXAGON_ARM_SYSROOT]: ${HOME}/Qualcomm/qrlinux_v1.0_sysroot
+ARMv7hf QRLinux sysroot [HEXAGON_ARM_SYSROOT]: ${HOME}/Qualcomm/qrlinux_v4_sysroot
 
 ### Stock Ubuntu Trusty (14.04) sysroot
 

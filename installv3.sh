@@ -147,8 +147,6 @@ fi
 
 GCC_2014=gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf
 GCC_2014_URL=https://releases.linaro.org/archive/14.11/components/toolchain/binaries/arm-linux-gnueabihf
-GCC_2016=gcc-linaro-4.9-2016.02-x86_64_arm-linux-gnueabihf
-GCC_2016_URL=https://releases.linaro.org/components/toolchain/binaries/4.9-2016.02/arm-linux-gnueabihf
 
 # Fetch ARMv7hf cross compiler
 if [ ! -f downloads/${GCC_2014}.tar.xz ]; then
@@ -161,23 +159,6 @@ if [ ! -d ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux ]; then
 	tar -C ${HEXAGON_SDK_ROOT} -xJf downloads/${GCC_2014}.tar.xz
 	mv ${HEXAGON_SDK_ROOT}/${GCC_2014} ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux
 fi
-
-# Until the Snapdragon Flight board supports the 2016 toolchain, updates are currently disabled.
-# ----------------------------------------------------------------------------
-# Update the ARM cross compiler
-#DEBUG_MINFILE=${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Debug.min
-#RELEASE_MINFILE=${HEXAGON_SDK_ROOT}/build/make.d.ext/UbuntuARM/defines_UbuntuARM_Release.min
-
-#if [ -f ${DEBUG_MINFILE} ]; then
-#    echo "Updating GCC version for Debug build"
-#    grep -q ${GCC_2014} ${DEBUG_MINFILE} && sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${DEBUG_MINFILE}
-#fi
-
-#if [ -f ${RELEASE_MINFILE} ]; then
-#    echo "Updating GCC version for Release build"
-#    grep -q ${GCC_2014} ${RELEASE_MINFILE} && sed -i -e "s/${GCC_2014}/${GCC_2016}/" ${RELEASE_MINFILE}
-#fi
-# ----------------------------------------------------------------------------
 
 if [ ! -f ${HEXAGON_SDK_ROOT}/libs/common/rpcmem/UbuntuARM_Debug/rpcmem.a ]; then
 	echo "Building rpcmem.a ..."
