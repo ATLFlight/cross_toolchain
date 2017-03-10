@@ -33,6 +33,15 @@
 ############################################################################
 
 # Installer script for Hexagon SDK 3.1 based environment
+#
+# Supported Options:
+#     --APQ8074		Installs SDK 3.0 with Hexagon v56 support for aDSP
+#     --APQ8096		Installs SDK 3.1 with Hexagon v60 support for SLPI
+#     --no-verify	Use for scripted installs
+#     --trim		Removed unneeded parts of SDK(s) and strip files
+#     --zip		Create a zip file(s) of the SDK(s)
+#     --arm-gcc		Install the Linaro 4.9 ARMv7hf cross compiler in SDK(s)
+#
 
 GCC_2014=gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf
 GCC_2014_URL=https://releases.linaro.org/archive/14.11/components/toolchain/binaries/arm-linux-gnueabihf
