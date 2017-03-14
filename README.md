@@ -4,7 +4,7 @@ This project will install the Hexagon SDK 3.0, Hexagon cross compiler, gcc 4.9 A
 
 ## SDK Installation
 
-Clone and build this project:
+Clone this project and run the installer:
 ```
 git clone https://github.com/ATLFlight/cross_toolchain.git
 cd cross_toolchain
