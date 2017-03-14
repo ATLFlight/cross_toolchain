@@ -57,11 +57,15 @@ usage() {
 	exit 1
 }
 
+trap fail_on_error ERR
+
+function fail_on_error() {
+	echo "Error: Script aborted";
+	exit 1;
+}
+
 OPTS=`getopt -n 'parse-options' -o h --long APQ8074,APQ8096,help,no-verify,trim,zip,arm-gcc -- "$@"`
 
-if [ $? != 0 ] ; then echo "Failed parsing options." >&2 ; exit 1 ; fi
-
-echo "$OPTS"
 eval set -- "$OPTS"
 
 APQ8074=0
@@ -96,13 +100,6 @@ if [ ${APQ8074} = 0 ] && [ ${APQ8096} = 0 ]; then
 	echo "Error: Must select one or both of --APQ8074 --APQ8096"
 	usage
 fi
-
-trap fail_on_error ERR
-
-function fail_on_error() {
-	echo "Error: Script aborted";
-	exit 1;
-}
 
 SDK_VER="UNSET"
 TARGET="UNSET"
@@ -146,9 +143,9 @@ trim_files() {
 	find ${HEXAGON_SDK_ROOT} -name "android*" | xargs rm -rf
 
 	if [ ${TARGET} = "APQ8074" ]; then
-		# We only need ADSPv56MP for APQ8074 aDSP
+		# We only need ADSPv55MP for APQ8074 aDSP
 		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/qurt/ADSPv4MP
-		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/qurt/ADSPv55MP
+		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/qurt/ADSPv56MP
 		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/qurt/ADSPv5MP
 		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/qurt/ADSPv60MP
 		rm -rf ${HEXAGON_SDK_ROOT}/libs/common/qurt/ADSPv62MP
