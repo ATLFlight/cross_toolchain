@@ -41,6 +41,7 @@
 #     --trim		Removed unneeded parts of SDK(s) and strip files
 #     --zip		Create a zip file(s) of the SDK(s)
 #     --arm-gcc		Install the Linaro 4.9 ARMv7hf cross compiler in SDK(s)
+#     --qrlSDK		Install the qrlSDK (only supported for --APQ8074)
 #
 
 GCC_2014=gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf
@@ -53,7 +54,7 @@ INSTALLER31_BIN=qualcomm_hexagon_sdk_3_1_eval.bin
 cd `dirname $0`
 
 usage() {
-	echo "Usage: `basename $0` [-h --help] --APQ8074 --APQ8096 [--no-verify --trim --zip --arm-gcc] [INSTALL_DIR]"
+	echo "Usage: `basename $0` [-h --help] [--APQ8074 --qrlSDK] [--APQ8096] [--no-verify --trim --zip --arm-gcc] [INSTALL_DIR]"
 	exit 1
 }
 
@@ -64,7 +65,7 @@ function fail_on_error() {
 	exit 1;
 }
 
-OPTS=`getopt -n 'parse-options' -o h --long APQ8074,APQ8096,help,no-verify,trim,zip,arm-gcc -- "$@"`
+OPTS=`getopt -n 'parse-options' -o h --long APQ8074,APQ8096,help,no-verify,trim,zip,arm-gcc,qrlSDK -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -85,6 +86,7 @@ while true; do
     --trim )      TRIM=1; shift ;;
     --zip )       DOZIP=1; shift ;;
     --arm-gcc )   KEEPGCC=1; shift ;;
+    --qrlSDK )    QRLSDK=1; shift ;;
     * ) break ;;
   esac
 done
@@ -101,8 +103,199 @@ if [ ${APQ8074} = 0 ] && [ ${APQ8096} = 0 ]; then
 	usage
 fi
 
+if [ ${APQ8074} = 0 ] && [ ${QRLSDK} = 1 ]; then
+	echo "Error: qrlSDK is only supported for --APQ8074"
+	usage
+fi
+
 SDK_VER="UNSET"
 TARGET="UNSET"
+
+remove_qrlsdk() {
+	if [ -d ${HEXAGON_ARM_SYSROOT} ]; then
+		echo "Removing previous QRLinux sysroot installation"
+		rm -rf ${HEXAGON_ARM_SYSROOT}
+	fi
+}
+
+install_qrlsdk() {
+	QRLSDK=qrlSDK
+	QRLSDKTGZ=${QRLSDK}.tgz
+
+	# Verify the ${QRLSDKTGZ} file was downloaded from Intrinsyc
+	if [ ! -f downloads/${QRLSDKTGZ} ]; then
+		echo
+		pwd
+		ls
+		echo "Please put the ${QRLSDKTGZ} file from the following link into the downloads"
+		echo "directory and re-run this script:"
+		echo "   http://support.intrinsyc.com/attachments/download/1011/${QRLSDKTGZ}"
+		exit 1
+	fi
+
+	QRLSDKMD5SUM=`md5sum -b downloads/qrlSDK.tgz | cut -d' ' -f1`
+
+	if [ ! ${QRLSDKMD5SUM} = af2e71ca7e4a2d68a608b1db98b49f74 ]; then
+		echo "Please re-download the ${QRLSDKTGZ} file from the following link into the downloads"
+		echo "directory and re-run this script:"
+		echo "   http://support.intrinsyc.com/attachments/download/1011/${QRLSDKTGZ}"
+		exit 1
+	fi
+
+	# Unpack sysroot
+	if [ ! -f ${HEXAGON_ARM_SYSROOT}/merged-rootfs/QRLSDKMD5SUM ] || \
+		([ -f ${HEXAGON_ARM_SYSROOT}/merged-rootfs/QRLSDKMD5SUM ] && 
+		 [ ! ${QRLSDKMD5SUM} = `cat ${HEXAGON_ARM_SYSROOT}/merged-rootfs/QRLSDKMD5SUM` ]); then
+		remove_qrlsdk
+
+		mkdir -p ${HEXAGON_ARM_SYSROOT}
+		echo "Unpacking sysroot..."
+		if [ ! -d downloads/qrlSDK ]; then
+			echo "Extracting qrlSDK tar file"
+			mkdir -p downloads/qrlSDK
+			pushd downloads/qrlSDK
+			tar xzf ../${QRLSDKTGZ}
+			popd
+		fi
+		if [ ! -f downloads/qrlSDK/qrlSysroots.tgz ]; then
+			echo "QRLinux SDK unpack failed"
+			exit 1
+		fi
+
+		echo "Extracting sysroot from qrlSDK"
+		if [ ! -d downloads/qrlSDK/sysroots/eagle8074/linaro-rootfs ]; then
+			tar -C downloads/qrlSDK -xzf downloads/qrlSDK/qrlSysroots.tgz sysroots/eagle8074
+		fi
+		mkdir -p ${HEXAGON_ARM_SYSROOT}
+		echo "Copying to ${HEXAGON_ARM_SYSROOT}"
+		cp -arp downloads/qrlSDK/sysroots/eagle8074/* ${HEXAGON_ARM_SYSROOT}
+
+		# Remove runtime files that are not required for building applications
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/sounds
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/consolefonts
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/file
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/oprofile
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/zoneinfo
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/perl5
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/mime
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/X11
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/terminfo
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/i18n
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/locale
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/man
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/doc
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/perl
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share/vim
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/share
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/bin/
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/sbin/
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/udev
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/lib/gcc
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/var
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/bin
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/sbin
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/dev
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/home
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/md5sum.txt
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/etc
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/boot
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/media
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/opt
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/mnt
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/root
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/run
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/sys
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/srv
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/tmp
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/local
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/games
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr/src
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/modules
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/firmware
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/systemd
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/terminfo
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/arm-linux-gnueabihf/security
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lib/arm-linux-gnueabihf/plymouth
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/lost+found
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/etc
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/bin
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/sbin
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/bin
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/sbin
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/src
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/share
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/lib/modules
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/lib/firmware
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/lib/ssl
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/include/linux
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/pkgdata
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/sysroot-providers
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/filesystem_config.txt
+
+		# The Ubuntu libc is used for SDK based development
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/include/eglibc-locale-internal-cortexa8hf-vfp-neon-linux-gnueabi
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/lib
+
+		# Use the Ubuntu versions of perl, python2.7 and ssl
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/python2.7
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libpython2.7.so*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libperl.so*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/perl
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libssl.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/pkgconfig/libssl.pc
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/ssl
+
+		# Remove other duplicate libs
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libm.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libm_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libpthread*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libsqlite3*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libanl.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libanl_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libBrokenLocale*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libcidn.so
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libcrypt.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libcrypt_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libc.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libc_nonshared.a
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libc_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libdb-5.3.so
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libdl.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libdl_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnsl.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnsl_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_compat.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_compat_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_dns.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_dns_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_files.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_files_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_hesiod.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_hesiod_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_nisplus.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_nisplus_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_nis.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libnss_nis_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libresolv.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libresolv_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/librt.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/librt_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libthread_db.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libthread_db_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libutil.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/libutil_pic.*
+		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/*crt*.o
+
+		# merge the files
+		rsync --recursive -l --ignore-existing -v ${HEXAGON_ARM_SYSROOT}/usr/lib ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr
+		rsync --recursive -l --ignore-existing -v ${HEXAGON_ARM_SYSROOT}/usr/include ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr
+
+		rm -rf ${HEXAGON_ARM_SYSROOT}/usr
+		rm -rf ${HEXAGON_ARM_SYSROOT}/var
+		mv ${HEXAGON_ARM_SYSROOT}/linaro-rootfs ${HEXAGON_ARM_SYSROOT}/merged-rootfs
+		echo ${QRLSDKMD5SUM} > ${HEXAGON_ARM_SYSROOT}/merged-rootfs/QRLSDKMD5SUM
+	fi
+}
 
 trim_files() {
 	# Trim unused files from HEXAGON SDK
@@ -358,6 +551,16 @@ show_env_setup() {
 	echo "Make sure to set the following environment variables:"
 	echo "   export HEXAGON_SDK_ROOT=${HEXAGON_SDK_ROOT}"
 	echo "   export HEXAGON_TOOLS_ROOT=${HEXAGON_TOOLS_ROOT}"
+	if [ ${APQ8074} = 1 ]; then
+		BASE=`echo ${HEXAGON_SDK_ROOT} | sed -e "s#/Qualcomm/Hexagon_SDK/.*##"`
+		HEXAGON_ARM_SYSROOT=${BASE}/Qualcomm/qrlinux_sysroot
+		if [ -d ${HEXAGON_ARM_SYSROOT}/merged-rootfs ]; then
+			echo "   export HEXAGON_ARM_SYSROOT=${BASE}/Qualcomm/qrlinux_sysroot/merged-rootfs"
+		else
+			echo "Warning: qrlSDK is not installed. Set HEXAGON_ARM_SYSROOT to the location of the sysroot."
+		fi
+		echo
+	fi
 	echo
 }
 
@@ -387,11 +590,19 @@ if [ ${APQ8074} = 1 ]; then
 
 	HEXAGON_SDK_ROOT=${HOME}/Qualcomm/Hexagon_SDK/3.0
 	HEXAGON_TOOLS_ROOT=${HOME}/Qualcomm/HEXAGON_Tools/7.2.12/Tools
+	BASE=`echo ${HEXAGON_SDK_ROOT} | sed -e "s#/Qualcomm/Hexagon_SDK/.*##"`
+	HEXAGON_ARM_SYSROOT=${BASE}/Qualcomm/qrlinux_sysroot
 	SDK_VER=3.0
 	TARGET=APQ8074
 
 	install_sdk
 	process_options
+
+	if [ ${QRLSDK} = 1 ]; then
+		install_qrlsdk
+	else
+		remove_qrlsdk
+	fi
 fi
 
 # Install Hexagon SDK 3.1 for APQ8096
