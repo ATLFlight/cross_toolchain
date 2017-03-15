@@ -36,6 +36,7 @@
 #
 
 GCC_2014=gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf
+GCC_2014_SHORT=gcc-4.9-2014.11
 GCC_2014_URL=https://releases.linaro.org/archive/14.11/components/toolchain/binaries/arm-linux-gnueabihf
 
 INSTALLER30_BIN=qualcomm_hexagon_sdk_lnx_3_0_eval.bin
@@ -46,19 +47,19 @@ cd `dirname $0`
 
 usage() {
 	echo
-	echo "Usage: `basename $0` [-h --help] [--APQ8074 --qrlSDK] [--APQ8096] [--no-verify --trim --zip --arm-gcc] [INSTALL_DIR]"
+	echo "Usage: `basename $0` [-h --help] [--APQ8074 --qrlSDK] [--APQ8096] [--no-verify --trim --tgz --arm-gcc] [INSTALL_DIR]"
 	echo
 	echo "Supported Options:"
+	echo "     --help, -h       Show this help"
 	echo "     --APQ8074        Installs SDK 3.0 with Hexagon v55 support for aDSP on APQ8074"
 	echo "     --APQ8096        Installs SDK 3.1 with Hexagon v60 support for SLPI on APQ8096"
+	echo "     --qrlSDK         Install the qrlSDK (only supported for --APQ8074)"
 	echo "     --no-verify      Use for scripted installs"
 	echo "     --trim           Removed unneeded parts of SDK(s) and strip files"
-	echo "     --zip            Create a zip file(s) of the SDK(s)"
+	echo "     --tgz            Create  gzipped tarball(s) of the installed SDK(s)"
 	echo "     --arm-gcc        Install the Linaro 4.9 ARMv7hf cross compiler in SDK(s)"
-	echo "     --qrlSDK         Install the qrlSDK (only supported for --APQ8074)"
-	echo "     --help, -h       Show this help"
 	echo
-	echo "If --arm-gcc is omitted, then the Linaro ARM compiler is removed for the specified target(s)."
+	echo "If --arm-gcc is omitted, then the Linaro ARM compiler is removed."
 	echo "If --qrlSDK is omitted, then the qrlSDK is removed if the specified target is --APQ8074."
 	echo
 	echo "INSTALL_DIR is the optional base path for installation. The default is \${HOME}."
@@ -73,7 +74,7 @@ function fail_on_error() {
 	exit 1;
 }
 
-OPTS=`getopt -n 'parse-options' -o h --long APQ8074,APQ8096,help,no-verify,trim,zip,arm-gcc,qrlSDK -- "$@"`
+OPTS=`getopt -n 'parse-options' -o h --long APQ8074,APQ8096,help,no-verify,trim,tgz,arm-gcc,qrlSDK -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -81,7 +82,7 @@ APQ8074=0
 APQ8096=0
 VERIFY=1
 TRIM=0
-DOZIP=0
+DOTGZ=0
 KEEPGCC=0
 HELP=0
 QRLSDK=0
@@ -93,7 +94,7 @@ while true; do
     --APQ8096 )   APQ8096=1; shift ;;
     --no-verify ) VERIFY=1; shift ;;
     --trim )      TRIM=1; shift ;;
-    --zip )       DOZIP=1; shift ;;
+    --tgz )       DOTGZ=1; shift ;;
     --arm-gcc )   KEEPGCC=1; shift ;;
     --qrlSDK )    QRLSDK=1; shift ;;
     * ) break ;;
@@ -134,9 +135,8 @@ install_qrlsdk() {
 	# Verify the ${QRLSDKTGZ} file was downloaded from Intrinsyc
 	if [ ! -f downloads/${QRLSDKTGZ} ]; then
 		echo
-		pwd
-		ls
-		echo "Please put the ${QRLSDKTGZ} file from the following link into the downloads"
+		echo "Error: Missing ${QRLSDKTGZ}"
+		echo "Please put the ${QRLSDKTGZ} file from the following link into the ./downloads"
 		echo "directory and re-run this script:"
 		echo "   http://support.intrinsyc.com/attachments/download/1011/${QRLSDKTGZ}"
 		exit 1
@@ -145,7 +145,7 @@ install_qrlsdk() {
 	QRLSDKMD5SUM=`md5sum -b downloads/qrlSDK.tgz | cut -d' ' -f1`
 
 	if [ ! ${QRLSDKMD5SUM} = af2e71ca7e4a2d68a608b1db98b49f74 ]; then
-		echo "Please re-download the ${QRLSDKTGZ} file from the following link into the downloads"
+		echo "Please re-download the ${QRLSDKTGZ} file from the following link into the ./downloads"
 		echo "directory and re-run this script:"
 		echo "   http://support.intrinsyc.com/attachments/download/1011/${QRLSDKTGZ}"
 		exit 1
@@ -296,8 +296,8 @@ install_qrlsdk() {
 		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/lib/*crt*.o
 
 		# merge the files
-		rsync --recursive -l --ignore-existing -v ${HEXAGON_ARM_SYSROOT}/usr/lib ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr
-		rsync --recursive -l --ignore-existing -v ${HEXAGON_ARM_SYSROOT}/usr/include ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr
+		rsync -q --recursive -l --ignore-existing -v ${HEXAGON_ARM_SYSROOT}/usr/lib ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr
+		rsync -q --recursive -l --ignore-existing -v ${HEXAGON_ARM_SYSROOT}/usr/include ${HEXAGON_ARM_SYSROOT}/linaro-rootfs/usr
 
 		rm -rf ${HEXAGON_ARM_SYSROOT}/usr
 		rm -rf ${HEXAGON_ARM_SYSROOT}/var
@@ -306,7 +306,7 @@ install_qrlsdk() {
 	fi
 }
 
-trim_files() {
+trim_sdk() {
 	# Trim unused files from HEXAGON SDK
 	rm -rf ${HEXAGON_SDK_ROOT}/build
 	rm -rf ${HEXAGON_SDK_ROOT}/docs
@@ -319,6 +319,8 @@ trim_files() {
 	rm -rf ${HEXAGON_SDK_ROOT}/tools/qaic/Linux_DoNotShip
 	rm -rf ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu10
 	rm -rf ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu12
+	rm -rf ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14
+	rm -rf ${HEXAGON_SDK_ROOT}/tools/qaic/Makefile
 	rm -rf ${HEXAGON_SDK_ROOT}/tools/utils
 	rm -rf ${HEXAGON_SDK_ROOT}/tools/elfsigner
 	rm -rf ${HEXAGON_SDK_ROOT}/scripts
@@ -329,9 +331,6 @@ trim_files() {
 	rm -rf ${HEXAGON_SDK_ROOT}/libs/common/FFTsfr
 	rm -rf ${HEXAGON_SDK_ROOT}/setup_sdk_env.sh
 	rm -rf ${HEXAGON_SDK_ROOT}/readme.txt
-	rm -rf ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux/share/info
-	rm -rf ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux/share/man
-	rm -rf ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux/share/doc
 	rm -rf ${HEXAGON_SDK_ROOT}/Uninstall_Hexagon_SDK
 	rm -rf ${HEXAGON_SDK_ROOT}/Launch\ Hexagon\ IDE
 	rm -rf ${HEXAGON_SDK_ROOT}/setup_sdk_env.source
@@ -364,12 +363,9 @@ trim_files() {
 		find ${HEXAGON_SDK_ROOT} -name "*_toolv72*" | xargs rm -rf
 	fi
 
-	#strip ${HEXAGON_SDK_ROOT}/tools/debug/mini-dm/Linux_Debug/mini-dm
-	#strip ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic
-
-	# Strip the binaries, libs and archives
-	elf_strip ${HEXAGON_SDK_ROOT}
-	archive_strip ${HEXAGON_SDK_ROOT}
+	rm -rf ${ARM_TOOLS_ROOT}/share/info
+	rm -rf ${ARM_TOOLS_ROOT}/share/man
+	rm -rf ${ARM_TOOLS_ROOT}/share/doc
 }
 
 process_options() {
@@ -380,16 +376,13 @@ process_options() {
 	fi
 
 	if [ ${KEEPGCC} = 0 ]; then
-		rm -rf ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux
+		rm -rf ${ARM_TOOLS_ROOT}
 	else
 		get_arm_compiler
 	fi
 
-	if [ ${DOZIP} = 1 ]; then
-		CURDIR=`pwd`
-		pushd ${HEXAGON_SDK_ROOT}/../../../
-		zip -r ${CURDIR}/Hexagon_SDK_${SDK_VER}.zip ./Qualcomm
-		popd
+	if [ ${DOTGZ} = 1 ]; then
+		tar -C ${HEXAGON_SDK_ROOT}/../../../ -czf Hexagon_SDK_${SDK_VER}.tgz ./Qualcomm
 	fi
 }
 
@@ -398,7 +391,7 @@ install_sdk() {
 	echo HEXAGON_SDK_ROOT=${HEXAGON_SDK_ROOT}
 	echo HEXAGON_TOOLS_ROOT=${HEXAGON_TOOLS_ROOT}
 
-	if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic ]; then
+	if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Linux/qaic ]; then
 
 		echo "Hexagon SDK not previously installed"
 		if [ ${SDK_VER} = "3.0" ]; then
@@ -424,26 +417,19 @@ install_sdk() {
 		fi
 	fi
 
-	echo "Verifying required tools were installed..."
-	# Verify required tools were installed
-	if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Ubuntu14/qaic ] || [ ! -f ${HEXAGON_SDK_ROOT}/tools/debug/mini-dm/Linux_Debug/mini-dm ]; then
-		echo "Failed to install Hexagon SDK"
-		exit 1
-	fi
-
-	echo "Running 'make' in ${HEXAGON_SDK_ROOT}/tools/qaic..."
 	# Set up the Hexagon SDK
-	if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Linux/qaic ]; then
+	if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Linux/qaic ] && [ -f ${HEXAGON_SDK_ROOT}/tools/qaic/Makefile ]; then
+		echo "Running 'make' in ${HEXAGON_SDK_ROOT}/tools/qaic..."
 		pushd .
 		cd ${HEXAGON_SDK_ROOT}/tools/qaic/
 		make
 		popd
 	fi
 
-	echo "Verifying setup is complete..."
-	# Verify setup is complete
-	if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Linux/qaic ]; then
-		echo "Failed to set up Hexagon SDK"
+	echo "Verifying required tools were installed..."
+	# Verify required tools were installed
+	if [ ! -f ${HEXAGON_SDK_ROOT}/tools/qaic/Linux/qaic ] || [ ! -f ${HEXAGON_SDK_ROOT}/tools/debug/mini-dm/Linux_Debug/mini-dm ]; then
+		echo "Failed to setup Hexagon SDK"
 		exit 1
 	fi
 
@@ -474,23 +460,24 @@ get_arm_compiler() {
 	fi
 
 	# Unpack armhf cross compiler
-	if [ ! -d ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux ]; then
+	if [ ! -d ${ARM_TOOLS_ROOT} ]; then
 		echo "Unpacking cross compiler..."
-		tar -C ${HEXAGON_SDK_ROOT} -xJf downloads/${GCC_2014}.tar.xz
-		mv ${HEXAGON_SDK_ROOT}/${GCC_2014} ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux
+		mkdir -p ${HOME}/Qualcomm/ARM_Tools
+		tar -C ${HOME}/Qualcomm/ARM_Tools -xJf downloads/${GCC_2014}.tar.xz
+		mv ${HOME}/Qualcomm/ARM_Tools/${GCC_2014} ${ARM_TOOLS_ROOT}
 	fi
-
-	export UBUNTUARM_TOOLS_DIR=${HEXAGON_SDK_ROOT}/${GCC_2014}_linux/bin
 }
 
 elf_strip () {
 	find $1 -type f -executable -print > tmp_elf_strip_list
 	for f in `cat tmp_elf_strip_list`; do
 		info=`file --brief $f`
-		if [ "`echo "$info" | head -c 3`" == "ELF" ]; then
-			echo "$info" | grep DSP6 && ${HEXAGON_TOOLS_ROOT}/bin/hexagon-strip --strip-unneeded $f
-			echo "$info" | grep ARM && ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux/bin/arm-linux-gnueabihf-strip --strip-unneeded $f
-			echo "$info" | grep x86-64 && strip --strip-unneeded $f
+		if [ "`echo \"$info\" | head -c 3`" == "ELF" ]; then
+			if [ ! "`echo \"$info\" | tail -c 10`" == " stripped" ]; then
+				echo "$info" | grep -q DSP6 && ${HEXAGON_TOOLS_ROOT}/bin/hexagon-strip --strip-unneeded $f
+				echo "$info" | grep -q ARM && ${ARM_TOOLS_ROOT}/bin/arm-linux-gnueabihf-strip --strip-unneeded $f
+				echo "$info" | grep -q x86-64 && strip --strip-unneeded $f
+			fi
 		fi
 	done
 	rm -f tmp_elf_strip_list
@@ -499,13 +486,17 @@ elf_strip () {
 archive_strip () {
 	find $1 -name "*.a" -print > tmp_archive_strip_list
 	for f in `cat tmp_archive_strip_list`; do
-		info=`readelf -h $f | grep Machine | uniq`
 
-		# hexagon-strip doesn't handle archives
-		#echo "$info" | grep DSP6 && ${HEXAGON_TOOLS_ROOT}/bin/hexagon-strip --strip-unneeded $f
-		
-		echo "$info" | grep ARM && ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux/bin/arm-linux-gnueabihf-strip --strip-unneeded $f
-		echo "$info" | grep X86-64 && strip --strip-unneeded $f
+		# adsp_info.a contains other archive files and messes up readelf -h
+		if `echo $f | grep -v -q /adsp_info.a`; then
+			info=`readelf -h $f | grep Machine | uniq`
+
+			# hexagon-strip doesn't handle archives
+			#echo "$info" | grep DSP6 && ${HEXAGON_TOOLS_ROOT}/bin/hexagon-strip --strip-unneeded $f
+			
+			echo "$info" | grep -q ARM && ${ARM_TOOLS_ROOT}/bin/arm-linux-gnueabihf-strip --strip-unneeded $f
+			echo "$info" | grep -q X86-64 && strip --strip-unneeded $f
+		fi
 	done
 	rm -f tmp_archive_strip_list
 }
@@ -522,30 +513,33 @@ trim_tools() {
 	rm -rf ${HEXAGON_TOOLS_ROOT}/lib/python2.7
 	if [ ${SDK_VER} = "3.0" ]; then
 		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60v1
-		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v50
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v56
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v5
+
+		# DO NOT REMOVE v60 (it is the default) in SDK 3.0
+		#rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
 	fi
-	rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v61
-	rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v61v1
-	rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v62
-
-	# DO NOT REMOVE v60 (it is the default)
-	#rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v60
-
-	# Strip the binaries, libs and archives
-	elf_strip ${HEXAGON_TOOLS_ROOT}
-	archive_strip ${HEXAGON_TOOLS_ROOT}
+	if [ ${SDK_VER} = "3.1" ]; then
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v61
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v61v1
+		rm -rf ${HEXAGON_TOOLS_ROOT}/target/hexagon/lib/v62
+	fi
 }
 
 trim() {
 	echo "Trimming HEXAGON_SDK_ROOT ..."
-	if [ ! "${HEXAGON_TOOLS_ROOT}" = "" ]; then
-		trim_files
+	if [ ! "${HEXAGON_SDK_ROOT}" = "" ]; then
+		trim_sdk
 	fi
 
 	echo "Trimming HEXAGON_TOOLS_ROOT ..."
 	if [ ! "${HEXAGON_TOOLS_ROOT}" = "" ]; then
-		trim_tools ${HEXAGON_TOOLS_ROOT}
+		trim_tools
 	fi
+
+	# Strip the binaries, libs and archives
+	elf_strip ${HOME}/Qualcomm
+	archive_strip ${HOME}/Qualcomm
 }
 
 show_env_setup() {
@@ -554,7 +548,7 @@ show_env_setup() {
 	echo " ${TARGET} Development"
 	echo "--------------------------------------------------------------------"
 	if [ ${KEEPGCC} = 1 ]; then
-		echo "armhf cross compiler is at: ${HEXAGON_SDK_ROOT}/${GCC_2014}_linux"
+		echo "armhf cross compiler is at: ${ARM_TOOLS_ROOT}/bin"
 		echo
 	fi
 	echo "Make sure to set the following environment variables:"
@@ -594,6 +588,9 @@ if [ ! -f /.dockerenv ] && [ ${VERIFY} = 1 ]; then
     fi
 fi
 
+# Set the path to ARM GCC
+ARM_TOOLS_ROOT=${HOME}/Qualcomm/ARM_Tools/${GCC_2014_SHORT}
+
 # Install Hexagon SDK 3.0 for APQ8074
 if [ ${APQ8074} = 1 ]; then
 
@@ -605,13 +602,14 @@ if [ ${APQ8074} = 1 ]; then
 	TARGET=APQ8074
 
 	install_sdk
-	process_options
 
 	if [ ${QRLSDK} = 1 ]; then
 		install_qrlsdk
 	else
 		remove_qrlsdk
 	fi
+
+	process_options
 fi
 
 # Install Hexagon SDK 3.1 for APQ8096
