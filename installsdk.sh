@@ -34,15 +34,6 @@
 
 # Installer script for Hexagon SDK 3.1 based environment
 #
-# Supported Options:
-#     --APQ8074		Installs SDK 3.0 with Hexagon v56 support for aDSP
-#     --APQ8096		Installs SDK 3.1 with Hexagon v60 support for SLPI
-#     --no-verify	Use for scripted installs
-#     --trim		Removed unneeded parts of SDK(s) and strip files
-#     --zip		Create a zip file(s) of the SDK(s)
-#     --arm-gcc		Install the Linaro 4.9 ARMv7hf cross compiler in SDK(s)
-#     --qrlSDK		Install the qrlSDK (only supported for --APQ8074)
-#
 
 GCC_2014=gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf
 GCC_2014_URL=https://releases.linaro.org/archive/14.11/components/toolchain/binaries/arm-linux-gnueabihf
@@ -54,7 +45,24 @@ INSTALLER31_BIN=qualcomm_hexagon_sdk_3_1_eval.bin
 cd `dirname $0`
 
 usage() {
+	echo
 	echo "Usage: `basename $0` [-h --help] [--APQ8074 --qrlSDK] [--APQ8096] [--no-verify --trim --zip --arm-gcc] [INSTALL_DIR]"
+	echo
+	echo "Supported Options:"
+	echo "     --APQ8074        Installs SDK 3.0 with Hexagon v55 support for aDSP on APQ8074"
+	echo "     --APQ8096        Installs SDK 3.1 with Hexagon v60 support for SLPI on APQ8096"
+	echo "     --no-verify      Use for scripted installs"
+	echo "     --trim           Removed unneeded parts of SDK(s) and strip files"
+	echo "     --zip            Create a zip file(s) of the SDK(s)"
+	echo "     --arm-gcc        Install the Linaro 4.9 ARMv7hf cross compiler in SDK(s)"
+	echo "     --qrlSDK         Install the qrlSDK (only supported for --APQ8074)"
+	echo "     --help, -h       Show this help"
+	echo
+	echo "If --arm-gcc is omitted, then the Linaro ARM compiler is removed for the specified target(s)."
+	echo "If --qrlSDK is omitted, then the qrlSDK is removed if the specified target is --APQ8074."
+	echo
+	echo "INSTALL_DIR is the optional base path for installation. The default is \${HOME}."
+	echo
 	exit 1
 }
 
