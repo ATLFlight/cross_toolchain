@@ -76,6 +76,7 @@ TRIM=0
 DOZIP=0
 KEEPGCC=0
 HELP=0
+QRLSDK=0
 
 while true; do
   case "$1" in
