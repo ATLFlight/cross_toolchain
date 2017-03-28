@@ -588,8 +588,8 @@ if [ ! -f /.dockerenv ] && [ ${VERIFY} = 1 ]; then
     fi
 fi
 
-# Set the path to ARM GCC
-ARM_TOOLS_ROOT=${HOME}/Qualcomm/ARM_Tools/${GCC_2014_SHORT}
+# The HEXAGON_Tools 7.2.12 get installed to ${HOME}/Qualcomm no matter what, so override ${HOME}
+export HOME=${HOME}
 
 # Install Hexagon SDK 3.0 for APQ8074
 if [ ${APQ8074} = 1 ]; then
