@@ -376,7 +376,9 @@ process_options() {
 	fi
 
 	if [ ${KEEPGCC} = 0 ]; then
-		rm -rf ${ARM_TOOLS_ROOT}
+		if [ ! -d ${ARM_TOOLS_ROOT} ]; then
+			rm -rf ${ARM_TOOLS_ROOT}
+		fi
 	else
 		get_arm_compiler
 	fi
@@ -590,6 +592,7 @@ fi
 
 # The HEXAGON_Tools 7.2.12 get installed to ${HOME}/Qualcomm no matter what, so override ${HOME}
 export HOME=${HOME}
+ARM_TOOLS_ROOT=${HOME}/Qualcomm/ARM_Tools/${GCC_2014_SHORT}
 
 # Install Hexagon SDK 3.0 for APQ8074
 if [ ${APQ8074} = 1 ]; then
