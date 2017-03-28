@@ -363,9 +363,9 @@ trim_sdk() {
 		find ${HEXAGON_SDK_ROOT} -name "*_toolv72*" | xargs rm -rf
 	fi
 
-	rm -rf ${ARM_TOOLS_ROOT}/share/info
-	rm -rf ${ARM_TOOLS_ROOT}/share/man
-	rm -rf ${ARM_TOOLS_ROOT}/share/doc
+	rm -rf ${ARM_CROSS_GCC_ROOT}/share/info
+	rm -rf ${ARM_CROSS_GCC_ROOT}/share/man
+	rm -rf ${ARM_CROSS_GCC_ROOT}/share/doc
 }
 
 process_options() {
@@ -376,8 +376,8 @@ process_options() {
 	fi
 
 	if [ ${KEEPGCC} = 0 ]; then
-		if [ ! -d ${ARM_TOOLS_ROOT} ]; then
-			rm -rf ${ARM_TOOLS_ROOT}
+		if [ ! -d ${ARM_CROSS_GCC_ROOT} ]; then
+			rm -rf ${ARM_CROSS_GCC_ROOT}
 		fi
 	else
 		get_arm_compiler
@@ -462,11 +462,11 @@ get_arm_compiler() {
 	fi
 
 	# Unpack armhf cross compiler
-	if [ ! -d ${ARM_TOOLS_ROOT} ]; then
+	if [ ! -d ${ARM_CROSS_GCC_ROOT} ]; then
 		echo "Unpacking cross compiler..."
 		mkdir -p ${HOME}/Qualcomm/ARM_Tools
 		tar -C ${HOME}/Qualcomm/ARM_Tools -xJf downloads/${GCC_2014}.tar.xz
-		mv ${HOME}/Qualcomm/ARM_Tools/${GCC_2014} ${ARM_TOOLS_ROOT}
+		mv ${HOME}/Qualcomm/ARM_Tools/${GCC_2014} ${ARM_CROSS_GCC_ROOT}
 	fi
 }
 
@@ -477,7 +477,7 @@ elf_strip () {
 		if [ "`echo \"$info\" | head -c 3`" == "ELF" ]; then
 			if [ ! "`echo \"$info\" | tail -c 10`" == " stripped" ]; then
 				echo "$info" | grep -q DSP6 && ${HEXAGON_TOOLS_ROOT}/bin/hexagon-strip --strip-unneeded $f
-				echo "$info" | grep -q ARM && ${ARM_TOOLS_ROOT}/bin/arm-linux-gnueabihf-strip --strip-unneeded $f
+				echo "$info" | grep -q ARM && ${ARM_CROSS_GCC_ROOT}/bin/arm-linux-gnueabihf-strip --strip-unneeded $f
 				echo "$info" | grep -q x86-64 && strip --strip-unneeded $f
 			fi
 		fi
@@ -496,7 +496,7 @@ archive_strip () {
 			# hexagon-strip doesn't handle archives
 			#echo "$info" | grep DSP6 && ${HEXAGON_TOOLS_ROOT}/bin/hexagon-strip --strip-unneeded $f
 			
-			echo "$info" | grep -q ARM && ${ARM_TOOLS_ROOT}/bin/arm-linux-gnueabihf-strip --strip-unneeded $f
+			echo "$info" | grep -q ARM && ${ARM_CROSS_GCC_ROOT}/bin/arm-linux-gnueabihf-strip --strip-unneeded $f
 			echo "$info" | grep -q X86-64 && strip --strip-unneeded $f
 		fi
 	done
@@ -550,7 +550,7 @@ show_env_setup() {
 	echo " ${TARGET} Development"
 	echo "--------------------------------------------------------------------"
 	if [ ${KEEPGCC} = 1 ]; then
-		echo "armhf cross compiler is at: ${ARM_TOOLS_ROOT}/bin"
+		echo "armhf cross compiler is at: ${ARM_CROSS_GCC_ROOT}/bin"
 		echo
 	fi
 	echo "Make sure to set the following environment variables:"
@@ -564,7 +564,9 @@ show_env_setup() {
 		else
 			echo "Warning: qrlSDK is not installed. Set HEXAGON_ARM_SYSROOT to the location of the sysroot."
 		fi
-		echo
+	fi
+	if [ ${KEEPGCC} = 1 ]; then
+		echo "   export ARM_CROSS_GCC_ROOT=${ARM_CROSS_GCC_ROOT}"
 	fi
 	echo
 }
@@ -592,7 +594,7 @@ fi
 
 # The HEXAGON_Tools 7.2.12 get installed to ${HOME}/Qualcomm no matter what, so override ${HOME}
 export HOME=${HOME}
-ARM_TOOLS_ROOT=${HOME}/Qualcomm/ARM_Tools/${GCC_2014_SHORT}
+ARM_CROSS_GCC_ROOT=${HOME}/Qualcomm/ARM_Tools/${GCC_2014_SHORT}
 
 # Install Hexagon SDK 3.0 for APQ8074
 if [ ${APQ8074} = 1 ]; then
