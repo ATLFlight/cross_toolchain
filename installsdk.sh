@@ -129,7 +129,7 @@ remove_qrlsdk() {
 }
 
 install_qrlsdk() {
-	QRLSDK=qrlSDK
+	QRLSDK=Flight_3.1.3_qrlSDK
 	QRLSDKTGZ=${QRLSDK}.tgz
 
 	# Verify the ${QRLSDKTGZ} file was downloaded from Intrinsyc
@@ -138,7 +138,7 @@ install_qrlsdk() {
 		echo "Error: Missing ${QRLSDKTGZ}"
 		echo "Please put the ${QRLSDKTGZ} file from the following link into the ./downloads"
 		echo "directory and re-run this script:"
-		echo "   http://support.intrinsyc.com/attachments/download/1011/${QRLSDKTGZ}"
+		echo "   https://support.intrinsyc.com/attachments/download/1515/${QRLSDKTGZ}"
 		exit 1
 	fi
 
@@ -148,7 +148,7 @@ install_qrlsdk() {
 		echo "Please make sure you have the latest version of this installer script and"
 		echo "re-download the ${QRLSDKTGZ} file from the following link into the ./downloads"
 		echo "directory and re-run this script:"
-		echo "   http://support.intrinsyc.com/attachments/download/1011/${QRLSDKTGZ}"
+		echo "   http://support.intrinsyc.com/attachments/download/1515/${QRLSDKTGZ}"
 		exit 1
 	fi
 
