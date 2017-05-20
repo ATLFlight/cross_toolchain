@@ -92,7 +92,7 @@ while true; do
     -h | --help ) HELP=1; shift ;;
     --APQ8074 )   APQ8074=1; shift ;;
     --APQ8096 )   APQ8096=1; shift ;;
-    --no-verify ) VERIFY=1; shift ;;
+    --no-verify ) VERIFY=0; shift ;;
     --trim )      TRIM=1; shift ;;
     --tgz )       DOTGZ=1; shift ;;
     --arm-gcc )   KEEPGCC=1; shift ;;
@@ -142,7 +142,7 @@ install_qrlsdk() {
 		exit 1
 	fi
 
-	QRLSDKMD5SUM=`md5sum -b downloads/qrlSDK.tgz | cut -d' ' -f1`
+	QRLSDKMD5SUM=`md5sum -b downloads/$QRLSDKTGZ | cut -d' ' -f1`
 
 	if [ ! ${QRLSDKMD5SUM} = 11f9b91ea2f3b0540a6d64756728d240 ]; then
 		echo "Please make sure you have the latest version of this installer script and"
