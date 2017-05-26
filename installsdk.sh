@@ -159,22 +159,28 @@ install_qrlsdk() {
 		remove_qrlsdk
 
 		mkdir -p ${HEXAGON_ARM_SYSROOT}
-		echo "Unpacking sysroot..."
-		if [ ! -d downloads/qrlSDK ]; then
+
+		# Clean out old SDK installations
+		if [ ! -f downloads/qrlSDK/sysroots/eagle8074/QRLSDKMD5SUM ] || \
+			([ -f downloads/qrlSDK/sysroots/eagle8074/QRLSDKMD5SUM ] && 
+			[ ! ${QRLSDKMD5SUM} = `cat downloads/qrlSDK/sysroots/eagle8074/QRLSDKMD5SUM` ]); then
+			rm -rf downloads/qrlSDK
 			echo "Extracting qrlSDK tar file"
 			mkdir -p downloads/qrlSDK
 			pushd downloads/qrlSDK
 			tar xzf ../${QRLSDKTGZ}
 			popd
 		fi
+
 		if [ ! -f downloads/qrlSDK/qrlSysroots.tgz ]; then
 			echo "QRLinux SDK unpack failed"
 			exit 1
 		fi
 
-		echo "Extracting sysroot from qrlSDK"
-		if [ ! -d downloads/qrlSDK/sysroots/eagle8074/linaro-rootfs ]; then
+		if [ ! -d downloads/qrlSDK/sysroots/eagle8074/QRLSDKMD5SUM ]; then
+			echo "Extracting sysroot from qrlSDK"
 			tar -C downloads/qrlSDK -xzf downloads/qrlSDK/qrlSysroots.tgz sysroots/eagle8074
+			echo ${QRLSDKMD5SUM} > downloads/qrlSDK/sysroots/eagle8074/QRLSDKMD5SUM
 		fi
 		mkdir -p ${HEXAGON_ARM_SYSROOT}
 		echo "Copying to ${HEXAGON_ARM_SYSROOT}"
@@ -182,8 +188,6 @@ install_qrlsdk() {
 
 		# Remove runtime files that are not required for building applications
 		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/include/eglibc-locale-internal-cortexa8hf-vfp-neon-linux-gnueabi
-
-		echo ${QRLSDKMD5SUM} > ${HEXAGON_ARM_SYSROOT}/QRLSDKMD5SUM
 	fi
 }
 
