@@ -129,7 +129,7 @@ remove_qrlsdk() {
 }
 
 install_qrlsdk() {
-	QRLSDK=Flight_3.1.3_qrlSDK
+	QRLSDK=Flight_3.1.4_qrlSDK
 	QRLSDKTGZ=${QRLSDK}.tgz
 
 	# Verify the ${QRLSDKTGZ} file was downloaded from Intrinsyc
@@ -144,7 +144,7 @@ install_qrlsdk() {
 
 	QRLSDKMD5SUM=`md5sum -b downloads/$QRLSDKTGZ | cut -d' ' -f1`
 
-	if [ ! ${QRLSDKMD5SUM} = 11f9b91ea2f3b0540a6d64756728d240 ]; then
+	if [ ! ${QRLSDKMD5SUM} = 91c36ba4d5b986db3b0e1b01b2d97416 ]; then
 		echo "Please make sure you have the latest version of this installer script and"
 		echo "re-download the ${QRLSDKTGZ} file from the following link into the ./downloads"
 		echo "directory and re-run this script:"
