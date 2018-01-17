@@ -1,7 +1,7 @@
 #!/bin/bash
 ############################################################################
 #
-#   Copyright (c) 2016 Mark Charlebois. All rights reserved.
+#   Copyright (c) 2018 Mark Charlebois. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -35,9 +35,9 @@
 # Installer script for Hexagon SDK 3.1 based environment
 #
 
-GCC_2014=gcc-linaro-4.9-2014.11-x86_64_arm-linux-gnueabihf
-GCC_2014_SHORT=gcc-4.9-2014.11
-GCC_2014_URL=https://releases.linaro.org/archive/14.11/components/toolchain/binaries/arm-linux-gnueabihf
+GCC_2017=gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf
+GCC_2017_SHORT=gcc-linaro-4.9.4-2017.01
+GCC_2017_URL=https://releases.linaro.org/components/toolchain/binaries/4.9-2017.01/arm-linux-gnueabihf
 
 INSTALLER30_BIN=qualcomm_hexagon_sdk_lnx_3_0_eval.bin
 INSTALLER31_BIN=qualcomm_hexagon_sdk_3_1_eval.bin
@@ -342,16 +342,16 @@ install_sdk() {
 
 get_arm_compiler() {
 	# Fetch ARMv7hf cross compiler
-	if [ ! -f downloads/${GCC_2014}.tar.xz ]; then
-		wget -P downloads ${GCC_2014_URL}/${GCC_2014}.tar.xz
+	if [ ! -f downloads/${GCC_2017}.tar.xz ]; then
+		wget -P downloads ${GCC_2017_URL}/${GCC_2017}.tar.xz
 	fi
 
 	# Unpack armhf cross compiler
 	if [ ! -d ${ARM_CROSS_GCC_ROOT} ]; then
 		echo "Unpacking cross compiler..."
 		mkdir -p ${HOME}/Qualcomm/ARM_Tools
-		tar -C ${HOME}/Qualcomm/ARM_Tools -xJf downloads/${GCC_2014}.tar.xz
-		mv ${HOME}/Qualcomm/ARM_Tools/${GCC_2014} ${ARM_CROSS_GCC_ROOT}
+		tar -C ${HOME}/Qualcomm/ARM_Tools -xJf downloads/${GCC_2017}.tar.xz
+		mv ${HOME}/Qualcomm/ARM_Tools/${GCC_2017} ${ARM_CROSS_GCC_ROOT}
 	fi
 }
 
@@ -479,7 +479,7 @@ fi
 
 # The HEXAGON_Tools 7.2.12 get installed to ${HOME}/Qualcomm no matter what, so override ${HOME}
 export HOME=${HOME}
-ARM_CROSS_GCC_ROOT=${HOME}/Qualcomm/ARM_Tools/${GCC_2014_SHORT}
+ARM_CROSS_GCC_ROOT=${HOME}/Qualcomm/ARM_Tools/${GCC_2017_SHORT}
 
 # Install Hexagon SDK 3.0 for APQ8074
 if [ ${APQ8074} = 1 ]; then
