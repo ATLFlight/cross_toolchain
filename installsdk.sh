@@ -42,6 +42,9 @@ GCC_2017_URL=https://releases.linaro.org/components/toolchain/binaries/4.9-2017.
 INSTALLER30_BIN=qualcomm_hexagon_sdk_lnx_3_0_eval.bin
 INSTALLER31_BIN=qualcomm_hexagon_sdk_3_1_eval.bin
 
+MD5_3131=11f9b91ea2f3b0540a6d64756728d240
+MD5_314=91c36ba4d5b986db3b0e1b01b2d97416
+
 # This must be run from the local dir
 cd `dirname $0`
 
@@ -144,7 +147,7 @@ install_qrlsdk() {
 
 	QRLSDKMD5SUM=`md5sum -b downloads/$QRLSDKTGZ | cut -d' ' -f1`
 
-	if [ ! ${QRLSDKMD5SUM} = 91c36ba4d5b986db3b0e1b01b2d97416 ]; then
+	if [ ${QRLSDKMD5SUM} != ${MD5_314} ]; then
 		echo "Please make sure you have the latest version of this installer script and"
 		echo "re-download the ${QRLSDKTGZ} file from the following link into the ./downloads"
 		echo "directory and re-run this script:"
@@ -247,10 +250,6 @@ trim_sdk() {
 		find ${HEXAGON_SDK_ROOT} -name "*_toolv74*" | xargs rm -rf
 		find ${HEXAGON_SDK_ROOT} -name "*_toolv72*" | xargs rm -rf
 	fi
-
-	rm -rf ${ARM_CROSS_GCC_ROOT}/share/info
-	rm -rf ${ARM_CROSS_GCC_ROOT}/share/man
-	rm -rf ${ARM_CROSS_GCC_ROOT}/share/doc
 }
 
 process_options() {
