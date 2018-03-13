@@ -16,6 +16,7 @@ debug=
 workspace=`pwd`
 sysroots_root=${workspace}/sysroots/eagle8074
 
+MD5_314=91c36ba4d5b986db3b0e1b01b2d97416
 
 # Verify that the SDK is installed in the workspace
 check_workspace() {
@@ -36,17 +37,52 @@ check_workspace() {
     exit 1
   fi
 
+  if [ -f ${sysroots_root}/QRLSDKMD5SUM ]; then
+    md5sum_actual=$(cat ${sysroots_root}/QRLSDKMD5SUM)
+    if [ ${md5sum_actual} != ${MD5_314} ]; then
+      echo "WARNING: SDK cleanup not required for this version. Skipping..."
+      exit 0
+    fi
+  fi
 }
 
 
 # Function to create non-versioned symbolic links for certain libraries that are missing
 fix_missing_links() {
 
+  # Handle the missing libcrypto case as an exception
   pushd ${sysroots_root}/lib/ > /dev/null
   if [ ! -f libcrypto.so ]; then
     $debug ln -s arm-linux-gnueabihf/libcrypto.so.1.0.0 libcrypto.so
   fi
   popd > /dev/null
+  echo "Fixed crypto library."
+  
+  # Find all libraries of the form lib*.so.x in the lib/arm-linux-gnueabihf location.
+  set +e
+  libs_arm_versioned_level1=$(find ${sysroots_root}/lib/arm-linux-gnueabihf -name lib*.so.? | rev |  cut -d'/' -f1 | rev )
+  set -e
+
+  # Loop over the list of libraries and create sym links to them from within the lib directory
+  fixcount=0
+  lib_count=0
+  index=0
+  for lib_entry in ${libs_arm_versioned_level1[@]}
+  do    
+    pushd ${sysroots_root}/lib > /dev/null
+    if [ -L "${sysroots_root}/lib/${lib_entry}" ] || [ -f "${sysroots_root}/lib/${lib_entry}" ]; then
+      $debug rm -f $lib_entry
+    fi
+    $debug ln -s ./arm-linux-gnueabihf/$lib_entry
+    popd > /dev/null
+    fixcount=$((fixcount+1))
+  done
+  
+  if [ $fixcount -eq 0 ]; then
+    echo "No *.so.x libraries to fix in $lib_path".
+  else
+    echo "Fixed $fixcount *.so.x libraries in lib".
+  fi  
 }
 
 
@@ -155,14 +191,14 @@ fix_incorrect_libs() {
   if [ $fixcount -eq 0 ]; then
     echo "No incorrect libraries to fix in $lib_path".
   else
-    echo "Fixed $fixcount libs in $lib_path".
+    echo "Fixed $fixcount incorrect libraries in $lib_path".
   fi
 
 }
 
 # If a sysroots path was passed in, then use it
 if [[ $1 ]]; then
-  sysroots_root=$1
+  sysroots_root=$(readlink --canonicalize $1)
 fi
 
 check_workspace
@@ -178,4 +214,4 @@ fix_incorrect_libs "lib"
 # Create non-versioned symbolic links for certain libraries that do not have them
 fix_missing_links
 
-echo "SDK fix complete."
+echo "Snapdragon Flight SDK fix complete."
