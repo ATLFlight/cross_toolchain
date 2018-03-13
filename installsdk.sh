@@ -190,7 +190,7 @@ install_qrlsdk() {
 		cp -arp downloads/qrlSDK/sysroots/eagle8074/* ${HEXAGON_ARM_SYSROOT}
 
 		# Remove runtime files that are not required for building applications
-		rm -rf   ${HEXAGON_ARM_SYSROOT}/usr/include/eglibc-locale-internal-cortexa8hf-vfp-neon-linux-gnueabi
+		rm -rf ${HEXAGON_ARM_SYSROOT}/usr/include/eglibc-locale-internal-cortexa8hf-vfp-neon-linux-gnueabi
 	fi
 }
 

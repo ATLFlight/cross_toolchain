@@ -14,12 +14,35 @@ debug=
 
 # This is assumed to be the location of qrlSDK directory installation
 workspace=`pwd`
+sysroots_root=${workspace}/sysroots/eagle8074
+
+
+# Verify that the SDK is installed in the workspace
+check_workspace() {
+
+  # This script is only applicable to a certain version of the Snapdragon Flight SDK.
+  # Therefore check for the presence of the correct version environment script and abort if not.
+  # NOTE: This test can only be done if the user manually installed the SDK.
+  if [ -d ${workspace}/sysroots ] && [ ! -e gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf ]
+  then
+    echo "WARNING: SDK cleanup not required for this version. Skipping..."
+    exit 0
+  fi
+
+  # Check for the presence of certain directories in the sysroots.
+  if [ ! -d ${sysroots_root}/usr/lib ] || [ ! -d ${sysroots_root}/lib ] || [ ! -d ${sysroots_root}/lib/arm-linux-gnueabihf ]
+  then
+    echo "ERROR: Unable to locate sysroots directories. You may be running this script from the wrong workspace OR the qrl SDK may not have been installed properly."
+    exit 1
+  fi
+
+}
 
 
 # Function to create non-versioned symbolic links for certain libraries that are missing
 fix_missing_links() {
 
-  pushd $workspace/sysroots/eagle8074/lib/ > /dev/null
+  pushd ${sysroots_root}/lib/ > /dev/null
   if [ ! -f libcrypto.so ]; then
     $debug ln -s arm-linux-gnueabihf/libcrypto.so.1.0.0 libcrypto.so
   fi
@@ -35,7 +58,7 @@ fix_broken_libs() {
   
   # Find all the broken symlinks
   set +e
-  broken_libs=$(find sysroots/eagle8074/${lib_path} -maxdepth 1 -xtype l | grep so)
+  broken_libs=$(find ${sysroots_root}/${lib_path} -maxdepth 1 -xtype l | grep so)
   set -e
   if [[ -z ${broken_libs} ]]; then
     echo "No broken libraries to fix in $lib_path"
@@ -61,11 +84,11 @@ fix_broken_libs() {
     broken_libarray=${broken_libarray[$index]}
     broken_lib=$(basename $broken_libarray)
 
-    versioned_lib_fullpath=$(find sysroots/eagle8074/lib/arm-linux-gnueabihf/ -maxdepth 1 -name "$broken_lib*" -print -quit)
-    versioned_lib_base=$(basename $versioned_lib_fullpath)
-    if test -n $versioned_lib_fullpath
+    versioned_lib_fullpath=$(find ${sysroots_root}/lib/arm-linux-gnueabihf/ -maxdepth 1 -name "$broken_lib*" -print -quit)
+    if [ ${#versioned_lib_fullpath} -ne 0 ]
     then
-      pushd sysroots/eagle8074/${lib_path} > /dev/null
+      versioned_lib_base=$(basename $versioned_lib_fullpath)
+      pushd ${sysroots_root}/${lib_path} > /dev/null
       $debug rm -f $broken_lib
       $debug ln -s ../../lib/arm-linux-gnueabihf/$versioned_lib_base $broken_lib
       popd > /dev/null
@@ -93,7 +116,7 @@ fix_incorrect_libs() {
   # Find all versionless library symlinks that link to the local versioned counterpart
   # Skip the ones that are already symlinked to other locations
   set +e
-  libs_with_local_symlinks_versionless=$(find sysroots/eagle8074/${lib_path} -maxdepth 1 -type l -ls | grep "so" | grep -v "arm-linux-gnueabihf" | rev | cut -d' ' -f3 | rev | grep -v "\.\." )
+  libs_with_local_symlinks_versionless=$(find ${sysroots_root}/${lib_path} -maxdepth 1 -type l -ls | grep "so" | grep -v "arm-linux-gnueabihf" | rev | cut -d' ' -f3 | rev | grep -v "\.\." )
   set -e
 
   # Loop over the list of libraries and create an array of versioned counterparts
@@ -117,10 +140,10 @@ fix_incorrect_libs() {
     lib_versioned_fullpath=${libarray_local_symlinks_versioned[$index]}
     lib_versioned=$(basename $lib_versioned_fullpath)
 
-    if [[ ! $lib_versioned_fullpath =~ .*arm-linux-gnueabihf.* ]] && [ -f sysroots/eagle8074/lib/arm-linux-gnueabihf/$lib_versioned ]
+    if [[ ! $lib_versioned_fullpath =~ .*arm-linux-gnueabihf.* ]] && [ -f ${sysroots_root}/lib/arm-linux-gnueabihf/$lib_versioned ]
     then
       $debug rm -f $lib_versioned_fullpath | true
-      pushd sysroots/eagle8074/${lib_path} > /dev/null
+      pushd ${sysroots_root}/${lib_path} > /dev/null
       $debug ln -s ../../lib/arm-linux-gnueabihf/$lib_versioned $lib_versioned
       popd > /dev/null
       echo "Fixed $lib_versioned"
@@ -130,20 +153,19 @@ fix_incorrect_libs() {
   done
 
   if [ $fixcount -eq 0 ]; then
-    echo "Nothing to fix in $lib_path".
+    echo "No incorrect libraries to fix in $lib_path".
   else
     echo "Fixed $fixcount libs in $lib_path".
   fi
 
 }
 
-
-# This script is only applicable to a certain version of the Snapdragon Flight SDK.
-# Check for the presence of the correct version and abort if not.
-if [ ! -e gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf ]; then
-  echo "WARNING: SDK cleanup not required for this version. Skipping..."
-  exit 0
+# If a sysroots path was passed in, then use it
+if [[ $1 ]]; then
+  sysroots_root=$1
 fi
+
+check_workspace
 
 # Fix broken library symbolic links
 fix_broken_libs "usr/lib"
