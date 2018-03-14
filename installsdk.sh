@@ -479,6 +479,7 @@ fi
 # The HEXAGON_Tools 7.2.12 get installed to ${HOME}/Qualcomm no matter what, so override ${HOME}
 export HOME=${HOME}
 ARM_CROSS_GCC_ROOT=${HOME}/Qualcomm/ARM_Tools/${GCC_2017_SHORT}
+script_path=$(dirname $(readlink -f $0))
 
 # Install Hexagon SDK 3.0 for APQ8074
 if [ ${APQ8074} = 1 ]; then
@@ -490,15 +491,20 @@ if [ ${APQ8074} = 1 ]; then
 	SDK_VER=3.0
 	TARGET=APQ8074
 
-	install_sdk
+	## install_sdk
 
 	if [ ${QRLSDK} = 1 ]; then
-		install_qrlsdk
+		echo install_qrlsdk
 	else
 		remove_qrlsdk
 	fi
 
-	process_options
+	## process_options
+	
+	pushd ${HEXAGON_ARM_SYSROOT} > /dev/null 	
+	echo "Running $script_path/fixsdk.sh from location ${HEXAGON_ARM_SYSROOT}"
+        ${script_path}/fixsdk.sh ${HEXAGON_ARM_SYSROOT}
+        popd > /dev/null
 fi
 
 # Install Hexagon SDK 3.1 for APQ8096
@@ -524,4 +530,3 @@ if [ ${APQ8096} = 1 ]; then
 	TARGET=APQ8096
 	show_env_setup
 fi
-
